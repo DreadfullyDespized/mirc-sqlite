@@ -28,9 +28,13 @@ jobs:
         run: |
           curl -sSL --retry 3 --max-time 120 "https://raw.githubusercontent.com/DreadfullyDespized/mirc/main/scripts/mrcs/msqlite.dll" -o /tmp/msqlite-2009.dll
           ls -la /tmp/msqlite-2009.dll
+      - name: Install mingw-w64 i686
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc-mingw-w64-i686
       - name: Fetch SQLite amalgamation
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc-mingw-w64-i686
           sh tools/fetch-sqlite.sh
       - name: Build the new DLL
         run: |
