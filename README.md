@@ -1,10 +1,18 @@
 # mirc-sqlite
 
-Clean-room mIRC SQLite DLL: a modern SQLite engine behind the `$sqlite_*`
-mIRC script interface. Replaces the 2009 msqlite.dll 1.3.0
-(SQLite 3.6.17), whose version ceiling is the root cause of recurring
-live bugs (USING-chain join failures, no window functions/upserts/partial
-indexes, OFFSET NULL datatype mismatch).
+A clean-room SQLite DLL for mIRC, built on the latest SQLite.
+
+mIRC scripts talk to SQLite through `$dll()` calls into a small DLL
+(`msqlite.dll`). The last public build of that DLL is from 2009 —
+msqlite.dll 1.3.0, bundling SQLite 3.6.17. Seventeen years of missing
+SQLite features later, that version ceiling is the root cause of
+recurring live bugs: USING-chain join failures, no window functions,
+no upserts, no partial indexes, OFFSET NULL datatype mismatches.
+
+This project rebuilds that DLL from scratch (clean-room C, ~15
+`$sqlite_*` identifiers plus `LoadDll`/`UnloadDll`) against the latest
+SQLite amalgamation, keeping the `$sqlite_*` script interface
+bit-compatible so existing mIRC scripts work unchanged.
 
 ## Status
 
@@ -13,8 +21,7 @@ build VM; the DLL does not exist yet.
 
 ## What's in here
 
-- `src/` — the DLL source (C, clean-room; ~15 `$sqlite_*` identifiers +
-  `LoadDll`/`UnloadDll`). Not written yet.
+- `src/` — the DLL source (C, clean-room). Not written yet.
 - `tools/proof/` — the Wine proof harness: real mIRC 7.79 + a candidate
   DLL on a private Xvfb display, running a real-world mIRC alias suite
   and diffing behavior against the 2009 DLL. Not built yet.
