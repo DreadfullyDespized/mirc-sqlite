@@ -18,8 +18,13 @@ existing mIRC scripts work unchanged.
 
 ## Status
 
-Pre-build. Wine + mIRC 7.79 proof environment is being stood up on the
-build VM; the DLL does not exist yet.
+Built and validated 2026-10-06. The 32-bit DLL (SQLite 3.53.4, 49
+`msqlite_*` exports + `LoadDll`/`UnloadDll`) was built with
+`i686-w64-mingw32-gcc` and proven in real mIRC 7.79 against a Test2
+snapshot: basic ops, alias query shapes, WAL concurrency, binds,
+transactions, multi-connection, handle lifecycle, large result sets,
+and long SQL. Full evidence record: `docs/TEST-SPEC.md`. PR #2
+(`dll/initial-build`) is under independent review; Dread merges.
 
 ## What's in here
 
