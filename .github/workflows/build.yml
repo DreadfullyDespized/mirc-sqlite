@@ -15,10 +15,10 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc-mingw-w64-i686
       - name: Fetch SQLite amalgamation
         run: |
-          sh tools/fetch-sqlite.sh
+          bash tools/fetch-sqlite.sh
       - name: Build 32-bit DLL
         run: |
-          sh tools/build.sh
+          bash tools/build.sh
       - name: Verify 32-bit PE
         run: |
           file build/msqlite.dll | grep -q "PE32 executable" || (echo "not a 32-bit PE" && exit 1)

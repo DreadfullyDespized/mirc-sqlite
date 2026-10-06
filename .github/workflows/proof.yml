@@ -35,23 +35,23 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc-mingw-w64-i686
       - name: Fetch SQLite amalgamation
         run: |
-          sh tools/fetch-sqlite.sh
+          bash tools/fetch-sqlite.sh
       - name: Build the new DLL
         run: |
-          sh tools/build.sh
+          bash tools/build.sh
       - name: Proof run against the 2009 DLL
         env:
           OUT: /tmp/mirc-sqlite-proof
         run: |
-          sh tools/proof/run.sh old /tmp/msqlite-2009.dll
+          bash tools/proof/run.sh old /tmp/msqlite-2009.dll
       - name: Proof run against the new DLL
         env:
           OUT: /tmp/mirc-sqlite-proof
         run: |
-          sh tools/proof/run.sh new build/msqlite.dll
+          bash tools/proof/run.sh new build/msqlite.dll
       - name: Diff old vs new behavior
         run: |
-          sh tools/proof/diff.sh /tmp/mirc-sqlite-proof/old/proof.log /tmp/mirc-sqlite-proof/new/proof.log
+          bash tools/proof/diff.sh /tmp/mirc-sqlite-proof/old/proof.log /tmp/mirc-sqlite-proof/new/proof.log
       - name: Upload proof logs
         if: always()
         uses: actions/upload-artifact@v4
