@@ -45,6 +45,15 @@ kill -0 $XPID 2>/dev/null || { echo "Xvfb $DISP failed to start" >&2; exit 3; }
 export DISPLAY=$DISP
 timeout "${WTIMEOUT:-180}" wine "$MIRC" -noconnect -r"$(w "$D")" > "$D/wine-stdout.log" 2>&1 &
 MPID=$!
+sleep 20
+echo "=== window list at t=20 ==="
+xdotool search --name '.' getwindowname %@ 2>&1 | head -20
+echo "=== mirc.ini ==="
+cat "$D/mirc.ini" | head -10
+echo "=== cfg.mrc ==="
+cat "$D/cfg.mrc"
+echo "=== wine-stdout.log head ==="
+head -30 "$D/wine-stdout.log"
 NCLICK=0
 T=0
 while kill -0 $MPID 2>/dev/null; do
