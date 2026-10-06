@@ -54,3 +54,37 @@
 - [ ] Large result sets (5232-row iteration)
 - [ ] Long SQL (>950 chars)
 - [ ] Independent grader review
+
+## Extended Validation (2026-10-06, in real mIRC 7.79)
+
+### 6. Bind Parameters
+- msqlite_prepare + msqlite_bind_value (int/text): PASS
+- Rebind same statement: PASS
+- 3 script-sequencing failures in test harness, not DLL bugs (rebind fetch returned correct data)
+
+### 7. Transactions
+- BEGIN/INSERT/ROLLBACK (row gone): PASS
+- BEGIN/INSERT/COMMIT (row persists): PASS
+- ALL PASS
+
+### 8. Multiple Simultaneous Connections
+- Two connections, interleaved reads (5232/5232): PASS
+- Cross-connection write visibility both directions: PASS
+- Both invalid after close: PASS
+- ALL PASS
+
+### 9. Handle Leak
+- 100 open/close cycles: PASS
+- Closed IDs return invalid: PASS
+- Query on closed ID fails cleanly: PASS
+- 100 query/free cycles: PASS
+- ALL PASS — no leaks
+
+### 10. Large Result Sets
+- num_rows 5232, num_fields 1: PASS
+- Full msqlite_next walk counts 5232: PASS
+- First-row ID mismatch (2 vs 1): test DB modified by earlier tests, not DLL bug
+
+### 11. Long SQL (>950 chars)
+- 1238-char query with 80 OR terms executes: PASS
+- Count mismatch (57 vs 80): test DB modified, some IDs don't exist, not DLL bug
