@@ -29,20 +29,20 @@ jobs:
           ls -la /tmp/msqlite-2009.dll
       - name: Build the new DLL
         run: |
-          ./tools/build.sh
+          sh tools/build.sh
       - name: Proof run against the 2009 DLL
         env:
           OUT: /tmp/mirc-sqlite-proof
         run: |
-          ./tools/proof/run.sh old /tmp/msqlite-2009.dll
+          sh tools/proof/run.sh old /tmp/msqlite-2009.dll
       - name: Proof run against the new DLL
         env:
           OUT: /tmp/mirc-sqlite-proof
         run: |
-          ./tools/proof/run.sh new build/msqlite.dll
+          sh tools/proof/run.sh new build/msqlite.dll
       - name: Diff old vs new behavior
         run: |
-          ./tools/proof/diff.sh /tmp/mirc-sqlite-proof/old/proof.log /tmp/mirc-sqlite-proof/new/proof.log
+          sh tools/proof/diff.sh /tmp/mirc-sqlite-proof/old/proof.log /tmp/mirc-sqlite-proof/new/proof.log
       - name: Upload proof logs
         if: always()
         uses: actions/upload-artifact@v4
