@@ -18,8 +18,13 @@ jobs:
         run: |
           echo "05be4812a3c0a0a1f412f22262b3cef7  tools/proof/deps/mirc779.exe" | md5sum -c -
       - name: Silent-install mIRC 7.79 into a Wine prefix
+        env:
+          WINEPREFIX: /home/runner/.wine-mirc-proof
+          WINEARCH: win64
+          WINEDEBUG: -all
         run: |
-          export WINEPREFIX=$HOME/.wine-mirc-proof WINEARCH=win64 WINEDEBUG=-all
+          rm -rf "$WINEPREFIX"
+          xvfb-run -a wineboot --init
           xvfb-run -a wine tools/proof/deps/mirc779.exe /S
           MIRC_EXE=$(find "$WINEPREFIX/drive_c" -iname mirc.exe -print -quit)
           [ -n "$MIRC_EXE" ] || { echo "mirc.exe not found after install"; find "$WINEPREFIX/drive_c" -maxdepth 3 | head -20; exit 1; }
