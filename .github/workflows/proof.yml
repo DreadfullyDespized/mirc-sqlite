@@ -24,7 +24,7 @@ jobs:
           WINEDEBUG: -all
         run: |
           rm -rf "$WINEPREFIX"
-          xvfb-run -a wineboot --init
+          xvfb-run -a wine64 wineboot --init
           xvfb-run -a wine tools/proof/deps/mirc779.exe /S
           MIRC_EXE=$(find "$WINEPREFIX/drive_c" -iname mirc.exe -print -quit)
           [ -n "$MIRC_EXE" ] || { echo "mirc.exe not found after install"; find "$WINEPREFIX/drive_c" -maxdepth 3 | head -20; exit 1; }
