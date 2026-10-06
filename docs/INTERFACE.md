@@ -9,7 +9,7 @@ so and names the safe choice.
 
 Audience: a C programmer implementing a new `msqlite.dll` (32-bit, ANSI/UTF-8
 see section 1) against a modern SQLite amalgamation, such that the unmodified
-`msqlite.mrc` v1.3.0 script — and the bot scripts built on it — work unchanged.
+`msqlite.mrc` v1.3.0 script — and the mIRC scripts built on it — work unchanged.
 
 Conventions in this doc:
 
@@ -185,7 +185,7 @@ receive double-quoted filenames:
 return $dll($sqlite_dll, msqlite_open, $qt($1) $iif($2, $qt($2)))
 ```
 
-`data` looks like `"C:\bot\Test2.sqlite"` or `":memory:" "C:\bot\from.db"`.
+`data` looks like `"C:\mirc\Test2.sqlite"` or `":memory:" "C:\mirc\from.db"`.
 The DLL needs a quote-aware tokenizer here: a `"` opens a quoted span that
 may contain spaces, closed by the next `"`. `$qt($null)` produces `""`
 (two quote characters, empty inside) — treat that as "argument omitted".
@@ -223,7 +223,7 @@ These exist in `msqlite.mrc` but never call `$dll()`. They are listed so the
 implementer does not go looking for exports that do not exist.
 
 - `$sqlite_escape_string` — pure script: `return $replace($1-, ', '')`
-  (doubles single quotes). The bot's 67 call sites use this, not the DLL.
+  (doubles single quotes). The 67 mIRC call sites use this, not the DLL.
 - `$sqlite_qt` — `return $+(',$1-,')` (wraps in single quotes).
 - `$sqlite_exec_file(...)` — rewrites itself into `$sqlite_exec(...).file`.
 - `$sqlite_begin` / `$sqlite_commit` / `$sqlite_rollback` — call
@@ -241,9 +241,9 @@ There is no `msqlite_escape_string` export. Do not create one.
 
 ---
 
-## 8. Group A — exports the bot actually uses
+## 8. Group A — exports mIRC scripts actually use
 
-These ~15 exports carry the bot's entire database traffic. Implement and
+These ~15 exports carry the scripts' entire database traffic. Implement and
 proof-test these first.
 
 ### msqlite_libversion
@@ -519,7 +519,7 @@ alias sqlite_result {
   delete the file after a grace period or on the next call; the script reads
   it synchronously inside the same `$dll()` evaluation via `bread`, so the
   file must exist when the function returns.
-- `$sqlite_fetch_single` (Group B, but the bot-adjacent reader) is the same
+- `$sqlite_fetch_single` (Group B, the adjacent reader) is the same
   export family with field fixed to column 1; see section 9.
 
 ### msqlite_busy_timeout
@@ -703,13 +703,11 @@ contract; parsing conventions from sections 6–8 apply.
    convert to text; embedded NULs terminate the C string — the value is
    truncated there. That matches the original's `$dll()` string semantics.
    Full-fidelity binary goes through the binvar/temp-file forms only.
-4. **Busy handling.** Long-held read transactions block writers. The bot's
-   workload is open → query → free → close per command, so contention is
+4. **Busy handling.** Long-held read transactions block writers. The typical workload is open → query → free → close per command, so contention is
    minimal, but set a default busy timeout on every connection opened by
    `msqlite_open` (the original used its config file default; a built-in
    1000 ms default is reasonable — record the choice).
-5. **Journal mode.** The bot shares its database files with a Python process
-   (see the repo's `bot-owner` work). The DLL must not enable WAL or change
+5. **Journal mode.** Scripts may share their database files with other processes. The DLL must not enable WAL or change
    journal modes on its own; default rollback-journal behavior keeps the
    file interoperable.
 6. **No config-file surprises.** The original read `msqlite.ini` for the

@@ -4,16 +4,15 @@
 
 Wine (32-bit) + real mIRC 7.79 + candidate DLL on a private Xvfb display,
 driven by `tools/proof/` (adapted from the mirc `tools/holiday-proof`
-harness). Each run: fresh Wine prefix, scratch SQLite copies only, the
-bot's real alias files, scripted steps with per-step logging. The 2009
+harness). Each run: fresh Wine prefix, scratch SQLite copies only, real-world mIRC alias files, scripted steps with per-step logging. The 2009
 msqlite.dll 1.3.0 is the behavior baseline — the new DLL must produce
 identical script-visible behavior except for the documented version
 fixes (USING-chain joins, window functions, upserts, partial indexes).
 
 ## Merge authority
 
-Thomas merges. Agent may open PRs; nothing merges without his approval,
-and nothing ships to the live bot without his explicit go-ahead.
+Dread merges. Agent may open PRs; nothing merges without his approval,
+and nothing ships to a live environment without his explicit go-ahead.
 
 ## Open state
 

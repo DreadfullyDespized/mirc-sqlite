@@ -7,9 +7,9 @@ How this repo is worked, inherited from the house standards.
   `## For Dread` (what changed, the proof, what he's asked to decide) and
   `## Blast radius` → CI green → the Wine proof bed → an independent
   grader (FAIL unless proven) → merge → post-ship check. No merge without
-  real green CI unless Thomas explicitly overrides.
-- **Merge authority**: Thomas merges. This DLL is mIRC infrastructure; it
-  never ships to the live bot without his explicit go-ahead.
+  real green CI unless Dread explicitly overrides.
+- **Merge authority**: Dread merges. This DLL is mIRC infrastructure; it
+  never ships to a live environment without his explicit go-ahead.
 - **Comment ban** (house rule): code and scripts carry no comments. The
   only survivor states a non-obvious why the code cannot express.
   Docs, records, and memory files are exempt — there the writing is the
@@ -22,8 +22,8 @@ How this repo is worked, inherited from the house standards.
   delete/move/tidy another project's files or anything of unclear
   ownership — flag it instead.
 - **Test bed** (see LOOP-STATE.md): Wine + real mIRC 7.79 + candidate DLL
-  on a private Xvfb display, running the bot's real scripts. The 2009
+  on a private Xvfb display, running real mIRC scripts. The 2009
   DLL is the behavior baseline; the new DLL must match it everywhere
   except the documented version-ceiling fixes.
-- **Live bot**: nothing here deploys to, restarts, or touches the live
-  bot or the live DB. Proof runs use scratch copies only.
+- **Live systems**: nothing here deploys to, restarts, or touches any
+  live mIRC instance or live database. Proof runs use scratch copies only.
