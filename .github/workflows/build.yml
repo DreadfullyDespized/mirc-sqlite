@@ -1,0 +1,24 @@
+name: build
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install mingw-w64 i686
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc-mingw-w64-i686
+      - name: Fetch SQLite amalgamation
+        run: |
+          ./tools/fetch-sqlite.sh
+      - name: Build 32-bit DLL
+        run: |
+          ./tools/build.sh
+      - name: Verify 32-bit PE
+        run: |
+          file build/msqlite.dll | grep -q "PE32 executable" || (echo "not a 32-bit PE" && exit 1)
