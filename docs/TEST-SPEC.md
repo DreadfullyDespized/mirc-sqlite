@@ -25,7 +25,7 @@
 | msqlite_busy_timeout (invalid ID) | PASS — empty, no hang/crash |
 
 ### 2. Alias Query Compatibility — 71/89 through the DLL
-- 95 SQL shapes extracted from SqliteUserDB-Alias.mrc (61 aliases); 6 AnkhBot shapes excluded per Thomas (different system)
+- 95 SQL shapes extracted from SqliteUserDB-Alias.mrc (61 aliases); 6 AnkhBot shapes excluded per Dread (different system)
 - 71 of the 89 Test2-oriented shapes PASS through `msqlite.dll`
 - The other 18 stopped on harness fixture gaps (missing temp tables, dynamic table/column names, unresolved mIRC variables) — not DLL errors
 - Those 18 shapes were re-validated 18/18 with corrected fixtures via stock Python sqlite3
