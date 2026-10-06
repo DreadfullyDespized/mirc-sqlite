@@ -13,7 +13,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wine32 xvfb xdotool curl
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wine32 wine64 xvfb xdotool curl
       - name: Verify mIRC 7.79 installer checksum
         run: |
           echo "05be4812a3c0a0a1f412f22262b3cef7  tools/proof/deps/mirc779.exe" | md5sum -c -
