@@ -10,7 +10,7 @@ esac
 DLL=$(readlink -f "$DLL_SRC")
 HERE=$(cd "$(dirname "$0")" && pwd)
 export WINEPREFIX=${WINEPREFIX:-$HOME/.wine-mirc-proof}
-export WINEARCH=win32
+export WINEARCH=win64
 export WINEDEBUG=-all
 MIRC=${MIRC_EXE:-$WINEPREFIX/drive_c/mIRC/mirc.exe}
 [ -f "$MIRC" ] || { echo "mirc.exe not found: $MIRC (set MIRC_EXE)" >&2; exit 2; }
@@ -48,6 +48,10 @@ MPID=$!
 NCLICK=0
 T=0
 while kill -0 $MPID 2>/dev/null; do
+  if [ $((T % 10)) -eq 0 ]; then
+    echo "t=$T windows:" >> "$D/dialogs.txt"
+    xdotool search --name '.' getwindowname %@ 2>/dev/null >> "$D/dialogs.txt" || echo "xdotool search failed" >> "$D/dialogs.txt"
+  fi
   if xdotool search --name '.' getwindowname %@ 2>/dev/null | grep -qvE '^(mIRC.*|About mIRC|Default IME|Wine.*|)$'; then
     echo "foreign window on $DISP, no input sent t=$T" >> "$D/dialogs.txt"
   else
@@ -56,6 +60,12 @@ while kill -0 $MPID 2>/dev/null; do
       sleep 1
       xdotool mousemove --window "$WID" 241 343 click 1 2>/dev/null
       NCLICK=$((NCLICK + 1))
+      echo "clicked About mIRC t=$T" >> "$D/dialogs.txt"
+    else
+      ABT=$(xdotool search --name 'mIRC' 2>/dev/null | head -3)
+      if [ -n "$ABT" ]; then
+        echo "t=$T mIRC-ish windows: $ABT" >> "$D/dialogs.txt"
+      fi
     fi
     UPD=$(xdotool search --name '^mIRC Update$' 2>/dev/null | head -1)
     if [ -n "$UPD" ]; then
