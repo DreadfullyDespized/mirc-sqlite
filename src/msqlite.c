@@ -856,17 +856,17 @@ static int run_prepared_stmt(stmt_t* s, bindset_t* inline_b, int want_rows, mhan
   return 1;
 }
 
-int __stdcall msqlite_libversion(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_libversion(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   set_ok();
   return putstr(data, sqlite3_libversion());
 }
 
-int __stdcall msqlite_dllversion(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_dllversion(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   set_ok();
   return putstr(data, DLLVERSION);
 }
 
-int __stdcall msqlite_error_string(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_error_string(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   int code = atoi(data);
   const char* m;
   set_ok();
@@ -877,7 +877,7 @@ int __stdcall msqlite_error_string(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, m ? m : "unknown error");
 }
 
-int __stdcall msqlite_open(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_open(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char db[512], from[512];
   int nargs = parse_quoted2(data, db, sizeof(db), from, sizeof(from));
   conn_t* c = 0;
@@ -920,7 +920,7 @@ int __stdcall msqlite_open(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return put_id(data, h->id);
 }
 
-int __stdcall msqlite_close(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_close(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   if (!parse_ulong(data, &id)) { set_err(200, "invalid connection id"); return putnull(data); }
@@ -931,7 +931,7 @@ int __stdcall msqlite_close(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_exec(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_exec(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   int is_stmt = 0, file = 0;
   bindset_t b = { 0, 0, 0 };
@@ -962,7 +962,7 @@ int __stdcall msqlite_exec(HWND, HWND, char* data, char*, BOOL, BOOL) {
   }
 }
 
-int __stdcall msqlite_query(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_query(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   int is_stmt = 0, file = 0;
   bindset_t b = { 0, 0, 0 };
@@ -997,7 +997,7 @@ int __stdcall msqlite_query(HWND, HWND, char* data, char*, BOOL, BOOL) {
   }
 }
 
-int __stdcall msqlite_free(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_free(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   if (!parse_ulong(data, &id)) { set_err(200, "invalid result id"); return putnull(data); }
@@ -1008,7 +1008,7 @@ int __stdcall msqlite_free(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_num_rows(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_num_rows(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   result_t* r;
@@ -1023,7 +1023,7 @@ int __stdcall msqlite_num_rows(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, b);
 }
 
-int __stdcall msqlite_num_fields(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_num_fields(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   result_t* r;
@@ -1037,7 +1037,7 @@ int __stdcall msqlite_num_fields(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, b);
 }
 
-int __stdcall msqlite_changes(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_changes(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   char b[32];
@@ -1049,7 +1049,7 @@ int __stdcall msqlite_changes(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, b);
 }
 
-int __stdcall msqlite_last_insert_rowid(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_last_insert_rowid(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   char b[32];
@@ -1061,7 +1061,7 @@ int __stdcall msqlite_last_insert_rowid(HWND, HWND, char* data, char*, BOOL, BOO
   return putstr(data, b);
 }
 
-int __stdcall msqlite_fetch_row(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_fetch_row(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   result_t* r;
@@ -1086,7 +1086,7 @@ int __stdcall msqlite_fetch_row(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_fetch_field(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_fetch_field(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], ssecond[256];
   const char* p = data;
   const char* q;
@@ -1171,7 +1171,7 @@ int __stdcall msqlite_fetch_field(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, out);
 }
 
-int __stdcall msqlite_busy_timeout(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_busy_timeout(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], sms[64];
   const char* p = data;
   unsigned long id;
@@ -1244,7 +1244,7 @@ fail:
   return 0;
 }
 
-int __stdcall msqlite_unbuffered_query(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_unbuffered_query(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   int is_stmt = 0, file = 0;
   bindset_t b = { 0, 0, 0 };
@@ -1279,7 +1279,7 @@ int __stdcall msqlite_unbuffered_query(HWND, HWND, char* data, char*, BOOL, BOOL
   }
 }
 
-int __stdcall msqlite_prepare(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_prepare(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], sfile[16];
   const char* p = data;
   unsigned long id;
@@ -1320,7 +1320,7 @@ int __stdcall msqlite_prepare(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return put_id(data, nh->id);
 }
 
-int __stdcall msqlite_bind_field(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_bind_field(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], sisname[16], svar[128];
   const char* p = data;
   unsigned long id;
@@ -1363,7 +1363,7 @@ int __stdcall msqlite_bind_field(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_bind_param(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_bind_param(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sstmt[64], sparam[128], svar[128], sdt[16];
   const char* p = data;
   unsigned long id;
@@ -1403,7 +1403,7 @@ int __stdcall msqlite_bind_param(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_bind_value(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_bind_value(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sstmt[64], sparam[128], sdt[16];
   const char* p = data;
   unsigned long id;
@@ -1441,7 +1441,7 @@ int __stdcall msqlite_bind_value(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_clear_bindings(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_clear_bindings(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   if (!parse_ulong(data, &id)) { set_err(200, "invalid id"); return putnull(data); }
@@ -1463,7 +1463,7 @@ int __stdcall msqlite_clear_bindings(HWND, HWND, char* data, char*, BOOL, BOOL) 
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_autocommit(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_autocommit(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], smode[16];
   const char* p = data;
   unsigned long id;
@@ -1631,7 +1631,7 @@ static udfnode_t* udf_track(conn_t* c, void* p) {
   return un;
 }
 
-int __stdcall msqlite_create_function(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_create_function(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], sname[128], salias[128], snargs[16], sprop[128];
   const char* p = data;
   unsigned long id;
@@ -1665,7 +1665,7 @@ int __stdcall msqlite_create_function(HWND, HWND, char* data, char*, BOOL, BOOL)
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_create_aggregate(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_create_aggregate(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], sname[128], sstep[128], sfin[128], snargs[16], sstepprop[128], sfinprop[128];
   const char* p = data;
   unsigned long id;
@@ -1703,7 +1703,7 @@ int __stdcall msqlite_create_aggregate(HWND, HWND, char* data, char*, BOOL, BOOL
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_signal_error(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_signal_error(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   if (!g_udf_active) { set_err(200, "not in user function"); return putnull(data); }
   strncpy(g_udf_err, data, sizeof(g_udf_err) - 1);
   g_udf_err[sizeof(g_udf_err) - 1] = 0;
@@ -1712,7 +1712,7 @@ int __stdcall msqlite_signal_error(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_set_authorizer(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_set_authorizer(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], salias[128], sprop[128];
   const char* p = data;
   unsigned long id;
@@ -1745,7 +1745,7 @@ int __stdcall msqlite_set_authorizer(HWND, HWND, char* data, char*, BOOL, BOOL) 
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_load_extension(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_load_extension(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], sfile[512], sentry[256];
   const char* p = data;
   unsigned long id;
@@ -1783,19 +1783,19 @@ static int is_valid_x(char* data, int type) {
   return putstr(data, (h && h->type == type) ? "1" : "0");
 }
 
-int __stdcall msqlite_is_valid_conn(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_is_valid_conn(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   return is_valid_x(data, HT_CONN);
 }
 
-int __stdcall msqlite_is_valid_result(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_is_valid_result(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   return is_valid_x(data, HT_RESULT);
 }
 
-int __stdcall msqlite_is_valid_statement(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_is_valid_statement(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   return is_valid_x(data, HT_STMT);
 }
 
-int __stdcall msqlite_is_memory(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_is_memory(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h;
   if (!parse_ulong(data, &id)) { set_err(200, "invalid connection id"); return putnull(data); }
@@ -1805,7 +1805,7 @@ int __stdcall msqlite_is_memory(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, ((conn_t*)h->ptr)->ismem ? "1" : "0");
 }
 
-int __stdcall msqlite_write_to_file(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_write_to_file(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sid[64], sfile[512], dummy[8];
   const char* p = data;
   unsigned long id;
@@ -1830,12 +1830,12 @@ int __stdcall msqlite_write_to_file(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_reload(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_reload(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   set_ok();
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_field_name(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_field_name(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], sidx[16];
   const char* p = data;
   unsigned long id;
@@ -1853,7 +1853,7 @@ int __stdcall msqlite_field_name(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, r->cols[idx - 1]);
 }
 
-int __stdcall msqlite_field_type(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_field_type(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], sidx[16];
   const char* p = data;
   unsigned long id;
@@ -1904,7 +1904,7 @@ static void fetch_all_row(FILE* f, result_t* r, int row, int delim) {
   fputc('\n', f);
 }
 
-int __stdcall msqlite_fetch_all(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_fetch_all(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], sdelim[16], sfile[512];
   const char* p = data;
   unsigned long id;
@@ -1952,7 +1952,7 @@ static mhandle_t* valid_result(char* data, unsigned long* id) {
   }
 }
 
-int __stdcall msqlite_has_more(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_has_more(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h = valid_result(data, &id);
   result_t* r;
@@ -1963,7 +1963,7 @@ int __stdcall msqlite_has_more(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, r->pos + 1 < r->nrows ? "1" : "0");
 }
 
-int __stdcall msqlite_has_prev(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_has_prev(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h = valid_result(data, &id);
   result_t* r;
@@ -1974,7 +1974,7 @@ int __stdcall msqlite_has_prev(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, r->pos >= 1 ? "1" : "0");
 }
 
-int __stdcall msqlite_next(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_next(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h = valid_result(data, &id);
   result_t* r;
@@ -1990,7 +1990,7 @@ int __stdcall msqlite_next(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "0");
 }
 
-int __stdcall msqlite_prev(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_prev(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h = valid_result(data, &id);
   result_t* r;
@@ -2006,7 +2006,7 @@ int __stdcall msqlite_prev(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "0");
 }
 
-int __stdcall msqlite_seek(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_seek(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], sidx[16];
   const char* p = data;
   unsigned long id;
@@ -2028,7 +2028,7 @@ int __stdcall msqlite_seek(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, "1");
 }
 
-int __stdcall msqlite_key(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_key(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   unsigned long id;
   mhandle_t* h = valid_result(data, &id);
   result_t* r;
@@ -2047,7 +2047,7 @@ int __stdcall msqlite_key(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return putstr(data, b);
 }
 
-int __stdcall msqlite_current(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_current(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], stab[128], stype[16];
   const char* p = data;
   unsigned long id;
@@ -2185,7 +2185,7 @@ static int do_fetch_bound(result_t* r, int advance, int all, char* data) {
   return 3;
 }
 
-int __stdcall msqlite_fetch_bound(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_fetch_bound(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], stype[16];
   const char* p = data;
   unsigned long id;
@@ -2201,7 +2201,7 @@ int __stdcall msqlite_fetch_bound(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return do_fetch_bound((result_t*)h->ptr, 1, all, data);
 }
 
-int __stdcall msqlite_current_bound(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_current_bound(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sres[64], stype[16];
   const char* p = data;
   unsigned long id;
@@ -2217,7 +2217,7 @@ int __stdcall msqlite_current_bound(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return do_fetch_bound((result_t*)h->ptr, 0, all, data);
 }
 
-int __stdcall msqlite_safe_encode(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_safe_encode(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sdelim[16], sdatum[4096];
   const char* p = data;
   int delim = -1;
@@ -2245,7 +2245,7 @@ int __stdcall msqlite_safe_encode(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return 3;
 }
 
-int __stdcall msqlite_safe_decode(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_safe_decode(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char sdatum[4096];
   const unsigned char* q;
   dynbuf out;
@@ -2270,7 +2270,7 @@ int __stdcall msqlite_safe_decode(HWND, HWND, char* data, char*, BOOL, BOOL) {
   return 3;
 }
 
-int __stdcall msqlite_field_metadata(HWND, HWND, char* data, char*, BOOL, BOOL) {
+int __stdcall msqlite_field_metadata(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL show, BOOL nopause) {
   char toks[5][256];
   int ntok = 0;
   const char* p = data;
