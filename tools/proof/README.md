@@ -3,16 +3,13 @@
 Runs real mIRC under Wine and diffs the 2009 `msqlite.dll` baseline against
 the new build over the alias suite in `proof.mrc`.
 
-## Prerequisite: the mIRC installer
+## Prerequisite: mIRC in the Wine prefix
 
-The proof needs a mIRC installer, which is proprietary software and is
-intentionally **not** committed to this repo. Provide it yourself:
-
-1. Download the installer from the vendor's download page (mirc.com).
-2. Save it as `tools/proof/deps/mirc-installer.exe` (this path is gitignored).
-
-The `check-installer` CI job looks for that path: the proof runs when it is
-present and is skipped otherwise.
+The proof needs a mIRC installation, which is proprietary software and is
+intentionally **not** committed to this repo. Provide it yourself: install
+mIRC into the Wine prefix the proof runs under
+(`$WINEPREFIX/drive_c/mIRC/mirc.exe`), or point `MIRC_EXE` at an existing
+`mirc.exe`. The workflow and scripts never touch an installer.
 
 ## Running it
 
@@ -23,8 +20,8 @@ Local (Linux with Wine):
 - `bash tools/proof/diff.sh /tmp/mirc-sqlite-proof/old/proof.log /tmp/mirc-sqlite-proof/new/proof.log`
 
 `run.sh` expects an installed `mirc.exe` at `$WINEPREFIX/drive_c/mIRC/mirc.exe`
-(or set `MIRC_EXE`). Install once with
-`wine tools/proof/deps/mirc-installer.exe /S` inside the prefix.
+(or set `MIRC_EXE`). Set up the Wine prefix and install mIRC into it yourself
+first.
 
 ## Notes
 
