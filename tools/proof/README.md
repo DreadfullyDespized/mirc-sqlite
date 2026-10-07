@@ -25,6 +25,8 @@ first.
 
 ## Notes
 
+- The `proof` GitHub workflow is manual-only (`workflow_dispatch`): it runs
+  on a prepared machine with mIRC already installed, never on hosted CI.
 - The 2009 baseline DLL is fetched from the mirc scripts repo at CI time;
   for local runs pass its path as the `dll-path` argument.
 - `MSQLITE_MRC` env overrides the alias file fetch for offline runs.
