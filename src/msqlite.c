@@ -10,6 +10,7 @@
 #define MAPSIZE 65536
 #define DLLVERSION "2.0.0"
 #define DEF_BUSY_MS 1000
+#define TMP_PATH_LEN (MAX_PATH + 48)
 
 typedef struct {
   DWORD mVersion;
@@ -48,7 +49,7 @@ static HANDLE g_map = 0;
 static char* g_mapview = 0;
 static unsigned long g_nextid = 1;
 static unsigned long g_tmpctr = 0;
-static char g_lasttmp[MAX_PATH] = "";
+static char g_lasttmp[TMP_PATH_LEN] = "";
 static int g_udf_active = 0;
 static int g_udf_errset = 0;
 static char g_udf_err[4096] = "";
@@ -558,7 +559,7 @@ static void make_temp_path(char* out, const char* ext) {
   char dir[MAX_PATH];
   DWORD pid = GetCurrentProcessId();
   GetTempPathA(sizeof(dir), dir);
-  sprintf(out, "%smsqlite_%lu_%lu.%s", dir, (unsigned long)pid, ++g_tmpctr, ext);
+  snprintf(out, TMP_PATH_LEN, "%smsqlite_%lu_%lu.%s", dir, (unsigned long)pid, ++g_tmpctr, ext);
 }
 
 static char* read_file(const char* path) {
@@ -568,11 +569,12 @@ static char* read_file(const char* path) {
   if (!f) return 0;
   fseek(f, 0, SEEK_END);
   n = ftell(f);
+  if (n < 0) { fclose(f); return 0; }
   rewind(f);
   b = (char*)malloc(n + 1);
   if (b && n > 0 && fread(b, 1, n, f) != (size_t)n) { free(b); b = 0; }
   fclose(f);
-  if (b) b[n < 0 ? 0 : n] = 0;
+  if (b) b[n] = 0;
   return b;
 }
 
@@ -717,9 +719,9 @@ static int temp_bin_path(char* out) {
   DWORD pid = GetCurrentProcessId();
   GetTempPathA(sizeof(dir), dir);
   if (GetShortPathNameA(dir, shrt, sizeof(shrt)) && !strchr(shrt, ' '))
-    sprintf(out, "%smsqlite_%lu_%lu.tmp", shrt, (unsigned long)pid, ++g_tmpctr);
+    snprintf(out, TMP_PATH_LEN, "%smsqlite_%lu_%lu.tmp", shrt, (unsigned long)pid, ++g_tmpctr);
   else
-    sprintf(out, "%smsqlite_%lu_%lu.tmp", dir, (unsigned long)pid, ++g_tmpctr);
+    snprintf(out, TMP_PATH_LEN, "%smsqlite_%lu_%lu.tmp", dir, (unsigned long)pid, ++g_tmpctr);
   return strchr(out, ' ') == 0;
 }
 
@@ -887,7 +889,7 @@ int __stdcall msqlite_open(HWND mWnd, HWND aWnd, char* data, char* parms, BOOL s
   int rc;
   mhandle_t* h;
   if (nargs == 0 || db[0] == 0) {
-    char path[MAX_PATH];
+    char path[TMP_PATH_LEN];
     make_temp_path(path, "db");
     rc = sqlite3_open_v2(path, &sq, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
     if (rc != SQLITE_OK) { set_err(rc, sq ? sqlite3_errmsg(sq) : "cannot open database"); if (sq) sqlite3_close(sq); return putnull(data); }
@@ -1159,7 +1161,7 @@ int __stdcall msqlite_fetch_field(HWND mWnd, HWND aWnd, char* data, char* parms,
   if (r->buffered) rawval_buffered(r, row, col, &v);
   else rawval_live(r->st, col, &v);
   if (is_binvar) {
-    char path[MAX_PATH];
+    char path[TMP_PATH_LEN];
     char rb[192];
     if (!write_temp_bin(v.p, v.n, path)) { set_err(14, "cannot write temp file"); return putnull(data); }
     _snprintf(rb, sizeof(rb) - 1, "%s %d %s", path, v.n, binvar);
@@ -2084,7 +2086,7 @@ static int do_fetch_bound(result_t* r, int advance, int all, char* data) {
   int i, j, nbin = 0;
   int row;
   dynbuf bdata, sizes, bvars;
-  char tmppath[MAX_PATH];
+  char tmppath[TMP_PATH_LEN];
   if (advance) {
     if (!res_step(r)) { set_err(201, "no more rows"); return putnull(data); }
   } else {
