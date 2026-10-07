@@ -5,47 +5,15 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
-  check-installer:
-    runs-on: ubuntu-latest
-    outputs:
-      present: ${{ steps.check.outputs.present }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check for the mIRC installer
-        id: check
-        run: |
-          if [ -f tools/proof/deps/mirc-installer.exe ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No mIRC installer at tools/proof/deps/mirc-installer.exe — proof skipped. See tools/proof/README.md."
-          fi
   proof:
-    needs: check-installer
-    if: needs.check-installer.outputs.present == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify the mIRC installer
-        run: |
-          file tools/proof/deps/mirc-installer.exe | grep -q "PE32" || { echo "not a PE installer"; exit 1; }
       - name: Install wine32, xvfb, xdotool
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wine32 wine64 xvfb xdotool curl
-      - name: Silent-install mIRC into a Wine prefix
-        env:
-          WINEPREFIX: /home/runner/.wine-mirc-proof
-          WINEARCH: win64
-          WINEDEBUG: -all
-        run: |
-          rm -rf "$WINEPREFIX"
-          xvfb-run -a /usr/lib/wine/wine64 wineboot --init
-          xvfb-run -a wine tools/proof/deps/mirc-installer.exe /S
-          MIRC_EXE=$(find "$WINEPREFIX/drive_c" -iname mirc.exe -print -quit)
-          [ -n "$MIRC_EXE" ] || { echo "mirc.exe not found after install"; find "$WINEPREFIX/drive_c" -maxdepth 3 | head -20; exit 1; }
-          echo "MIRC_EXE=$MIRC_EXE" >> "$GITHUB_ENV"
       - name: Fetch the 2009 msqlite.dll baseline
         run: |
           curl -sSL --retry 3 --max-time 120 "https://raw.githubusercontent.com/DreadfullyDespized/mirc/main/scripts/mrcs/msqlite.dll" -o /tmp/msqlite-2009.dll
