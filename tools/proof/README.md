@@ -11,7 +11,8 @@ intentionally **not** committed to this repo. Provide it yourself:
 1. Download the installer from the vendor's download page (mirc.com).
 2. Save it as `tools/proof/deps/mirc-installer.exe` (this path is gitignored).
 
-CI fails closed with a pointer here when the installer is absent.
+The `check-installer` CI job looks for that path: the proof runs when it is
+present and is skipped otherwise.
 
 ## Running it
 
