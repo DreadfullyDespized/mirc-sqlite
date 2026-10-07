@@ -85,13 +85,15 @@ static char* mirc_escape(const char* s) {
   const char* p;
   char* o;
   char* q;
-  for (p = s; *p; p++) n += (*p == '$' || *p == '%') ? 8 : 1;
+  for (p = s; *p; p++) n += (*p == '$' || *p == '%' || *p == '\r' || *p == '\n') ? 8 : 1;
   o = (char*)malloc(n + 1);
   if (!o) return strdup("");
   q = o;
   for (p = s; *p; p++) {
     if (*p == '$') { memcpy(q, "$chr(36)", 8); q += 8; }
     else if (*p == '%') { memcpy(q, "$chr(37)", 8); q += 8; }
+    else if (*p == '\r') { memcpy(q, "$chr(13)", 8); q += 8; }
+    else if (*p == '\n') { memcpy(q, "$chr(10)", 8); q += 8; }
     else *q++ = *p;
   }
   *q = 0;
@@ -1114,7 +1116,7 @@ int __stdcall msqlite_fetch_field(HWND mWnd, HWND aWnd, char* data, char* parms,
     if (ssecond[0] == '&' && !*q) {
       is_binvar = 1;
       col = 0;
-      strcpy(binvar, ssecond);
+      get_tok(ssecond, binvar, sizeof(binvar));
     } else {
       const char* end = data + strlen(data);
       const char* t;
@@ -1524,14 +1526,17 @@ static void udf_arg_text(sqlite3_value* v, char* out, int cap) {
 static void udf_build_call(dynbuf* d, const char* alias, const char* prop, const char* first, int argc, sqlite3_value** argv) {
   int i;
   char ab[1024];
+  char* e;
   db_putc(d, '$');
   db_puts(d, alias);
   db_putc(d, '(');
-  if (first) db_puts(d, first);
+  if (first) { e = mirc_escape(first); db_puts(d, e); free(e); }
   for (i = 0; i < argc; i++) {
     if (i || first) db_putc(d, ',');
     udf_arg_text(argv[i], ab, sizeof(ab));
-    db_puts(d, ab);
+    e = mirc_escape(ab);
+    db_puts(d, e);
+    free(e);
   }
   db_putc(d, ')');
   if (prop && prop[0]) { db_putc(d, '.'); db_puts(d, prop); }
@@ -1609,10 +1614,10 @@ static int auth_cb(void* p, int action, const char* a1, const char* a2, const ch
   db_putc(&d, '(');
   sprintf(num, "%d", action);
   db_puts(&d, num);
-  db_putc(&d, ','); db_puts(&d, a1 ? a1 : "");
-  db_putc(&d, ','); db_puts(&d, a2 ? a2 : "");
-  db_putc(&d, ','); db_puts(&d, dbn ? dbn : "");
-  db_putc(&d, ','); db_puts(&d, trig ? trig : "");
+  e = mirc_escape(a1 ? a1 : ""); db_putc(&d, ','); db_puts(&d, e); free(e);
+  e = mirc_escape(a2 ? a2 : ""); db_putc(&d, ','); db_puts(&d, e); free(e);
+  e = mirc_escape(dbn ? dbn : ""); db_putc(&d, ','); db_puts(&d, e); free(e);
+  e = mirc_escape(trig ? trig : ""); db_putc(&d, ','); db_puts(&d, e); free(e);
   db_putc(&d, ')');
   if (a->prop[0]) { db_putc(&d, '.'); db_puts(&d, a->prop); }
   if (!mirc_eval(d.b ? d.b : "", out, sizeof(out))) { db_free(&d); return SQLITE_DENY; }
