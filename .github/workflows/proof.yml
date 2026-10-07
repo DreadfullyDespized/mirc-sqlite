@@ -14,18 +14,14 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wine32 wine64 xvfb xdotool curl
-      - name: Download mIRC installer from the vendor
-        env:
-          MIRC_INSTALLER_URL: ${{ vars.MIRC_INSTALLER_URL }}
-          MIRC_INSTALLER_MD5: ${{ vars.MIRC_INSTALLER_MD5 }}
+      - name: Check for the mIRC installer
         run: |
-          mkdir -p tools/proof/deps
-          [ -n "$MIRC_INSTALLER_URL" ] || { echo "repository variable MIRC_INSTALLER_URL is not set"; exit 1; }
-          curl -sSL --retry 3 --max-time 300 "$MIRC_INSTALLER_URL" -o tools/proof/deps/mirc-installer.exe
-          file tools/proof/deps/mirc-installer.exe | grep -q "PE32" || { echo "downloaded file is not a PE installer"; exit 1; }
-          if [ -n "$MIRC_INSTALLER_MD5" ]; then
-            echo "$MIRC_INSTALLER_MD5  tools/proof/deps/mirc-installer.exe" | md5sum -c -
+          if [ ! -f tools/proof/deps/mirc-installer.exe ]; then
+            echo "mIRC installer not found at tools/proof/deps/mirc-installer.exe"
+            echo "See tools/proof/README.md for how to provide it."
+            exit 1
           fi
+          file tools/proof/deps/mirc-installer.exe | grep -q "PE32" || { echo "not a PE installer"; exit 1; }
       - name: Silent-install mIRC into a Wine prefix
         env:
           WINEPREFIX: /home/runner/.wine-mirc-proof
