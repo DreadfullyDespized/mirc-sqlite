@@ -5,23 +5,35 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  check-installer:
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for the mIRC installer
+        id: check
+        run: |
+          if [ -f tools/proof/deps/mirc-installer.exe ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No mIRC installer at tools/proof/deps/mirc-installer.exe — proof skipped. See tools/proof/README.md."
+          fi
   proof:
+    needs: check-installer
+    if: needs.check-installer.outputs.present == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify the mIRC installer
+        run: |
+          file tools/proof/deps/mirc-installer.exe | grep -q "PE32" || { echo "not a PE installer"; exit 1; }
       - name: Install wine32, xvfb, xdotool
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wine32 wine64 xvfb xdotool curl
-      - name: Check for the mIRC installer
-        run: |
-          if [ ! -f tools/proof/deps/mirc-installer.exe ]; then
-            echo "mIRC installer not found at tools/proof/deps/mirc-installer.exe"
-            echo "See tools/proof/README.md for how to provide it."
-            exit 1
-          fi
-          file tools/proof/deps/mirc-installer.exe | grep -q "PE32" || { echo "not a PE installer"; exit 1; }
       - name: Silent-install mIRC into a Wine prefix
         env:
           WINEPREFIX: /home/runner/.wine-mirc-proof
