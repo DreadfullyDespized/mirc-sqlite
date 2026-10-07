@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   pull_request:
+permissions:
+  contents: read
 jobs:
   cross-compile:
     runs-on: ubuntu-latest
@@ -15,10 +17,10 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc-mingw-w64-i686
       - name: Fetch SQLite amalgamation
         run: |
-          ./tools/fetch-sqlite.sh
+          bash tools/fetch-sqlite.sh
       - name: Build 32-bit DLL
         run: |
-          ./tools/build.sh
+          bash tools/build.sh
       - name: Verify 32-bit PE
         run: |
           file build/msqlite.dll | grep -q "PE32 executable" || (echo "not a 32-bit PE" && exit 1)
