@@ -4,3 +4,4 @@ build/
 sqlite-amalgamation-*/
 *.tar.gz
 .wine*/
+tools/proof/deps/*.exe

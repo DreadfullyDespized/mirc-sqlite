@@ -14,10 +14,19 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wine32 wine64 xvfb xdotool curl
-      - name: Verify mIRC 7.79 installer checksum
+      - name: Download mIRC installer from the vendor
+        env:
+          MIRC_INSTALLER_URL: ${{ vars.MIRC_INSTALLER_URL }}
+          MIRC_INSTALLER_MD5: ${{ vars.MIRC_INSTALLER_MD5 }}
         run: |
-          echo "05be4812a3c0a0a1f412f22262b3cef7  tools/proof/deps/mirc779.exe" | md5sum -c -
-      - name: Silent-install mIRC 7.79 into a Wine prefix
+          mkdir -p tools/proof/deps
+          [ -n "$MIRC_INSTALLER_URL" ] || { echo "repository variable MIRC_INSTALLER_URL is not set"; exit 1; }
+          curl -sSL --retry 3 --max-time 300 "$MIRC_INSTALLER_URL" -o tools/proof/deps/mirc-installer.exe
+          file tools/proof/deps/mirc-installer.exe | grep -q "PE32" || { echo "downloaded file is not a PE installer"; exit 1; }
+          if [ -n "$MIRC_INSTALLER_MD5" ]; then
+            echo "$MIRC_INSTALLER_MD5  tools/proof/deps/mirc-installer.exe" | md5sum -c -
+          fi
+      - name: Silent-install mIRC into a Wine prefix
         env:
           WINEPREFIX: /home/runner/.wine-mirc-proof
           WINEARCH: win64
@@ -25,7 +34,7 @@ jobs:
         run: |
           rm -rf "$WINEPREFIX"
           xvfb-run -a /usr/lib/wine/wine64 wineboot --init
-          xvfb-run -a wine tools/proof/deps/mirc779.exe /S
+          xvfb-run -a wine tools/proof/deps/mirc-installer.exe /S
           MIRC_EXE=$(find "$WINEPREFIX/drive_c" -iname mirc.exe -print -quit)
           [ -n "$MIRC_EXE" ] || { echo "mirc.exe not found after install"; find "$WINEPREFIX/drive_c" -maxdepth 3 | head -20; exit 1; }
           echo "MIRC_EXE=$MIRC_EXE" >> "$GITHUB_ENV"
