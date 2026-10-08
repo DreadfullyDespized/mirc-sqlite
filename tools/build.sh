@@ -8,6 +8,7 @@ fi
 mkdir -p build
 i686-w64-mingw32-gcc -c -o build/sqlite3.o build/deps/sqlite3.c -Ibuild/deps -O2 \
   -DSQLITE_ENABLE_LOAD_EXTENSION -DSQLITE_ENABLE_COLUMN_METADATA
-i686-w64-mingw32-gcc -c -o build/msqlite.o src/msqlite.c -Ibuild/deps -O2 -Wall
-i686-w64-mingw32-gcc -shared -o build/msqlite.dll build/msqlite.o build/sqlite3.o src/msqlite.def \
+i686-w64-mingw32-gcc -c -o build/msqlite.o src/msqlite.c -Ibuild/deps -O2 -Wall -Wextra -Wno-unused-parameter
+i686-w64-mingw32-windres -O coff -o build/msqlite.res src/msqlite.rc
+i686-w64-mingw32-gcc -shared -o build/msqlite.dll build/msqlite.o build/sqlite3.o build/msqlite.res src/msqlite.def \
   -s -static-libgcc

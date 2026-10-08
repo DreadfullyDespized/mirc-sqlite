@@ -24,3 +24,8 @@ jobs:
       - name: Verify 32-bit PE
         run: |
           file build/msqlite.dll | grep -q "PE32 executable" || (echo "not a 32-bit PE" && exit 1)
+      - name: Upload DLL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: msqlite.dll
+          path: build/msqlite.dll

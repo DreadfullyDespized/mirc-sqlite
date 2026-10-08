@@ -731,3 +731,19 @@ contract; parsing conventions from sections 6–8 apply.
    (`LOADINFO.mBytes` on ≥7.64). A single column value longer than that is
    truncated by mIRC itself on the way in and on the way out. Nothing the
    DLL can do — but it must not overflow the buffer trying.
+10. **Same-connection re-entrancy is refused.** Extending item 7: a `$dll()`
+    call made from inside a UDF/authorizer alias that targets the *same*
+    connection is refused with `%sqlite_errno` 200 ("reentrant call").
+    Calls on *other* connections are unaffected, and `msqlite_signal_error`
+    keeps working inside the callback.
+11. **Buffer ceilings.** Values are silently truncated at: 16384 bytes for
+    `msqlite_fetch_field` text results, `%var` bind evaluations, and UDF
+    return values; 65536 bytes for commands sent back into mIRC; 4096
+    characters of `msqlite_safe_encode`/`msqlite_safe_decode` input;
+    511 characters for `msqlite_open` database paths (a longer path is
+    truncated and may open a different file — keep paths short).
+12. **Bind-count cap.** More than 1,000,000 bind values on one call is
+    rejected with error 200.
+13. **UDF blob arguments.** Blob arguments passed to a script alias
+    truncate at the first embedded NUL (extends item 3 to the UDF
+    argument path).
