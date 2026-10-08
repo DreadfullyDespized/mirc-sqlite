@@ -8,7 +8,7 @@
 - Output: PE32/i386 DLL, 49 `msqlite_*` exports + `LoadDll`/`UnloadDll`
 
 ## Test Environment
-- mIRC 7.79 (32-bit) on Windows (DREAD-PC)
+- mIRC 7.79 (32-bit) on Windows
 - Test DB: copy of the Test2-2026-09-23.sqlite snapshot (32 tables, User: 5232 rows); the live DB was never touched
 - Fixture fact, verified 2026-10-06 against the pristine snapshot: `User.idUser` starts at 2, is non-contiguous (max 5708), and exactly 57 of the ids 1..80 exist. Test oracles that assumed ids 1..80 all exist were wrong; the DLL's answers were right.
 
@@ -84,4 +84,4 @@
 - [ ] Dread's merge decision on PR #2
 
 ## Cleanup
-- DREAD-PC test directory `D:\mirc-dll-test\` removed and verified gone 2026-10-06 after testing
+- Test directory `D:\mirc-dll-test\` removed and verified gone 2026-10-06 after testing
