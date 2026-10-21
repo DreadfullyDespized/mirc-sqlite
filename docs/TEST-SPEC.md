@@ -50,7 +50,7 @@
 
 ### 6. Bind Parameters
 - `msqlite_prepare` (int and text): PASS
-- `msqlite_bind_value` int + query + fetch: PASS — bound idUser=2 returned `oldmanfishing`, matching the snapshot
+- `msqlite_bind_value` int + query + fetch: PASS — bound idUser=2 returned the expected name, matching the snapshot
 - Rebind same statement with a new int: PASS — correct row again
 - The 3 first-run failures traced to the fixture assuming idUser=1 exists (snapshot: MIN(idUser)=2): int fetch "no more rows", empty setup name, and the cascading text-fetch failure. Not DLL defects.
 - Text bind was accepted (returned 1) but its end-to-end fetch never ran against a real value — rerun with a valid id PENDING
