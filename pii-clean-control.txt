@@ -1,0 +1,1 @@
+clean control file for the gate proof.
