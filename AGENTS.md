@@ -8,8 +8,9 @@ How this repo is worked, inherited from the house standards.
   `## Blast radius` → CI green → the Wine proof bed → an independent
   grader (FAIL unless proven) → merge → post-ship check. No merge without
   real green CI unless Dread explicitly overrides.
-- **Merge authority**: Dread merges. This DLL is mIRC infrastructure; it
-  never ships to a live environment without his explicit go-ahead.
+- **Merge authority**: Dread merges. This is a PROD repo, as set by the
+  `Repo label: PROD` first line of [README.md](README.md). This DLL is mIRC
+  infrastructure; it never ships to a live environment without his explicit go-ahead.
 - **Comment ban** (house rule): code and scripts carry no comments. The
   only survivor states a non-obvious why the code cannot express.
   Docs, records, and memory files are exempt — there the writing is the
