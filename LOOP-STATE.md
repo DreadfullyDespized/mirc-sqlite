@@ -14,13 +14,17 @@ fixes (USING-chain joins, window functions, upserts, partial indexes).
 Dread merges. Agent may open PRs; nothing merges without his approval,
 and nothing ships to a live environment without his explicit go-ahead.
 
-## Open state
+## State
 
-1. Wine + mIRC 7.79 environment: being stood up on the build VM
-   (2026-10-05).
-2. DLL source: not written yet. Target: ~15 `$sqlite_*` identifiers +
-   `LoadDll`/`UnloadDll`, clean-room C, 32-bit, modern SQLite amalgamation.
-3. Proof harness: not built yet.
-4. Baseline behaviors to preserve: the exact `$sqlite_result` /
-   `$sqlite_errstr` / `$sqlite_errno` semantics the scripts rely on
-   (spec to be extracted into `docs/`).
+1. DLL source: merged in PR #2 on 2026-10-07. `src/msqlite.c` is
+   clean-room C, 32-bit, on the SQLite 3.53.4 amalgamation, with 49
+   `msqlite_*` exports + `LoadDll`/`UnloadDll` (`src/msqlite.def`).
+   Code-review fixes merged in PR #12.
+2. Validation: the 2026-10-06 run in real mIRC 7.79 is recorded in
+   `docs/TEST-SPEC.md`.
+3. Proof files: `tools/proof/proof.mrc` (alias suite) and
+   `tools/proof/diff.sh` (log diff between the 2009 DLL and the new build).
+4. Baseline behaviors: the `$sqlite_*` semantics the scripts rely on,
+   including `$sqlite_result` / `$sqlite_errstr` / `$sqlite_errno`, are
+   specified in `docs/INTERFACE.md`.
+5. Open: PR #16 (issue #15), SQLite 3.54.0 and DLL 2.1.0, not merged.

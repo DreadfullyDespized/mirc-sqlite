@@ -80,8 +80,8 @@
 ## Pending
 - [ ] Text-bind end-to-end fetch with a valid fixture value (rerun)
 - [ ] 18 alias shapes rerun through `msqlite.dll` (proven via stock sqlite3 only so far)
-- [ ] Independent grader review (requested 2026-10-06)
-- [ ] Dread's merge decision on PR #2
+- [x] Independent grader review: PR #12 records the 2026-10-07 two-pass code review (grader PASS); its findings are issues #7-#11
+- [x] Dread's merge decision on PR #2: Dread merged it on 2026-10-07
 
 ## Cleanup
 - Test directory removed and verified gone 2026-10-06 after testing

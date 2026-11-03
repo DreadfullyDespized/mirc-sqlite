@@ -20,21 +20,29 @@ existing mIRC scripts work unchanged.
 
 ## Status
 
-Built and validated 2026-10-06. The 32-bit DLL (SQLite 3.53.4, 49
-`msqlite_*` exports + `LoadDll`/`UnloadDll`) was built with
-`i686-w64-mingw32-gcc` and proven in real mIRC 7.79 against a Test2
-snapshot: basic ops, alias query shapes, WAL concurrency, binds,
-transactions, multi-connection, handle lifecycle, large result sets,
-and long SQL. Full evidence record: `docs/TEST-SPEC.md`. PR #2
-(`dll/initial-build`) is under independent review; Dread merges.
+Shipped. PR #2 ("Clean-room msqlite.dll: 49 exports, SQLite 3.53.4",
+branch `dll/initial-build`) was merged by Dread on 2026-10-07. The
+32-bit DLL (SQLite 3.53.4, DLL version 2.0.0, 49 `msqlite_*` exports +
+`LoadDll`/`UnloadDll`) is built with `i686-w64-mingw32-gcc`; the `build`
+workflow cross-compiles it and uploads it as an artifact on every PR and
+push to `main`. It was proven in real mIRC 7.79 against a Test2 snapshot
+on 2026-10-06: basic ops, alias query shapes, WAL concurrency, binds,
+transactions, multi-connection, handle lifecycle, large result sets, and
+long SQL. Full evidence record: `docs/TEST-SPEC.md`. Fixes from the
+2026-10-07 code review merged in PR #12. PR #16 (SQLite 3.54.0, DLL
+2.1.0) is open and not merged.
 
 ## What's in here
 
-- `src/` — the DLL source (C, clean-room). Not written yet.
-- `tools/proof/` — the Wine proof harness: real mIRC 7.79 + a candidate
-  DLL on a private Xvfb display, running a real-world mIRC alias suite
-  and diffing behavior against the 2009 DLL. Not built yet.
-- `docs/` — interface spec (the identifier behaviors mIRC scripts rely on).
+- `src/` — the DLL source: `msqlite.c` (clean-room C), `msqlite.def`
+  (the export list) and `msqlite.rc` (the version resource).
+- `tools/` — `fetch-sqlite.sh` (downloads and hash-checks the SQLite
+  3.53.4 amalgamation), `build.sh` (the 32-bit build), `checks/` (the PII
+  gate) and `proof/`: `proof.mrc`, the alias suite that exercises the
+  query shapes in `docs/INTERFACE.md`, and `diff.sh`, which compares its
+  log from the 2009 DLL with its log from the new build.
+- `docs/` — interface spec (`INTERFACE.md`) and the validation record
+  (`TEST-SPEC.md`).
 
 ## Rules
 
