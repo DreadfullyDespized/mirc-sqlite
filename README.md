@@ -22,15 +22,16 @@ existing mIRC scripts work unchanged.
 
 Shipped. PR #2 ("Clean-room msqlite.dll: 49 exports, SQLite 3.53.4",
 branch `dll/initial-build`) was merged by Dread on 2026-10-07. The
-32-bit DLL (SQLite 3.53.4, DLL version 2.0.0, 49 `msqlite_*` exports +
-`LoadDll`/`UnloadDll`) is built with `i686-w64-mingw32-gcc`; the `build`
-workflow cross-compiles it and uploads it as an artifact on every PR and
-push to `main`. It was proven in real mIRC 7.79 against a Test2 snapshot
-on 2026-10-06: basic ops, alias query shapes, WAL concurrency, binds,
-transactions, multi-connection, handle lifecycle, large result sets, and
-long SQL. Full evidence record: `docs/TEST-SPEC.md`. Fixes from the
-2026-10-07 code review merged in PR #12. PR #16 (SQLite 3.54.0, DLL
-2.1.0) is open and not merged.
+32-bit DLL (SQLite 3.53.4, 49 `msqlite_*` exports + `LoadDll`/`UnloadDll`)
+is built with `i686-w64-mingw32-gcc`; the `build` workflow cross-compiles
+it and uploads it as an artifact on every PR and push to `main`. It was
+proven in real mIRC 7.79 against a Test2 snapshot on 2026-10-06: basic
+ops, alias query shapes, WAL concurrency, binds, transactions,
+multi-connection, handle lifecycle, large result sets, and long SQL. Full
+evidence record: `docs/TEST-SPEC.md`. Fixes from the 2026-10-07 code
+review merged in PR #12 on 2026-10-08, which also added the DLL version
+resource (`src/msqlite.rc`, version 2.0.0). A SQLite 3.54.0 bump (DLL
+2.1.0) is proposed in PR #16.
 
 ## What's in here
 
