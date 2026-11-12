@@ -8,7 +8,8 @@ with `diff.sh`:
 - `bash tools/proof/diff.sh old/proof.log new/proof.log`
 
 The new DLL must match the baseline everywhere except the documented
-version-ceiling fixes. Scratch databases only — nothing touches a live
-instance.
+version-ceiling fixes. Step s16's AUTHFN-DENY line is an expected
+difference from the 2009 baseline. Scratch databases only — nothing
+touches a live instance.
 
 - `MSQLITE_MRC` env overrides the alias file fetch for offline runs.

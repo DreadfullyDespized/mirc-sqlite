@@ -8,7 +8,7 @@
 #define WM_MCOMMAND (WM_USER + 200)
 #define WM_MEVALUATE (WM_USER + 201)
 #define MAPSIZE 65536
-#define DLLVERSION "2.0.0"
+#define DLLVERSION "2.1.0"
 #define DEF_BUSY_MS 1000
 #define TMP_PATH_LEN (MAX_PATH + 48)
 
