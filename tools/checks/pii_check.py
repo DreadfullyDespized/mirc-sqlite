@@ -115,9 +115,12 @@ def main(argv=None):
     else:
         ap.error("pass --event, --text-file, or --stdin")
     for surface, cls, lineno in hits:
-        print(f"pii: {surface} {cls} line {lineno}")
+        print(f"pii: {surface} {cls} line {lineno}. Fix: delete the identifier from that {surface} text.")
     if hits:
-        print(f"pii: {len(hits)} hit(s); remove the identifier(s) or ask Dread for an exception")
+        print(f"pii: {len(hits)} hit(s); remove the identifier(s) or ask Dread for an exception. "
+              "Fix: delete each identifier from the PR body, added line, or commit message named above.")
+        print("Fix it on this same PR: edit the PR body or push the fix to this branch. "
+              "Do not close and reopen a copy. Do not rerun CI without a change.")
         return 1
     print("pii: clean")
     return 0
