@@ -115,7 +115,7 @@ def main(argv=None):
     else:
         ap.error("pass --event, --text-file, or --stdin")
     for surface, cls, lineno in hits:
-        print(f"pii: {surface} {cls} line {lineno}. Fix: delete the identifier from that {surface} text.")
+        print(f"pii: {surface} {cls} line {lineno}. Fix: delete the identifier on that line.")
     if hits:
         print(f"pii: {len(hits)} hit(s); remove the identifier(s) or ask Dread for an exception. "
               "Fix: delete each identifier from the PR body, added line, or commit message named above.")
