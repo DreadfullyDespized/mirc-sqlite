@@ -15,14 +15,13 @@ SEATS = frozenset({
     "hester",
     "sidony quire",
     "sidony",
-    "oralie",
     "calla wrenfield",
     "calla",
     "ines varro",
     "ines",
 })
 SEAT_FIX = (
-    "Lyska, Hester Quill, Sidony Quire, Oralie, Calla Wrenfield, Ines Varro "
+    "Lyska, Hester Quill, Sidony Quire, Calla Wrenfield, Ines Varro "
     "(a first name alone is fine)"
 )
 HTML_COMMENT_RX = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
