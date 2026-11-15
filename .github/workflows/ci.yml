@@ -16,3 +16,4 @@ jobs:
     with:
       runner: ${{ vars.CI_RUNNER_LABEL || 'ubuntu-latest' }}
       max-file-mb: ${{ fromJSON(vars.CI_MAX_FILE_MB || '10') }}
+      allowed-email: ${{ vars.CI_ALLOWED_EMAIL || '5559848+DreadfullyDespized@users.noreply.github.com' }}
