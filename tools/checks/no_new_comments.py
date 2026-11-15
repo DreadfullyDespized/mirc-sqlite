@@ -1,76 +1,8 @@
 #!/usr/bin/env python3
-r"""no-new-comments: no code comment in any tracked file (Dread's standing rule).
-
-Dread's rule (2026-10-04): no code comments, ever, from any bot. This check
-fails when a tracked file contains a comment. pii-gate.yml runs it with --all
-on every pull_request. --base still reports comments on lines a
-diff adds between two commits.
-
-Languages, by file extension (extensionless files by their shebang):
-  Python      .py .pyw              '#' comments, found with tokenize, so a '#'
-                                    inside a string is not a comment and
-                                    docstrings are not comments
-  bash/sh     .sh .bash             '#' at the start of a word, outside quotes,
-                                    $#, ${#x} and heredoc bodies
-  PowerShell  .ps1 .psm1 .psd1      '#' at the start of a token and <# ... #>
-  JS/TS       .js .mjs .cjs .jsx    '//' and '/* */', outside strings, template
-              .ts .tsx .mts .cts    literals and regex literals
-  CSS         .css                  '/* */'
-  HTML        .html .htm            '<!-- -->', plus JS comments inside <script>
-                                    and CSS comments inside <style>
-  mIRC        .mrc .als             a line starting with ';', and /* */ blocks
-  mIRC .ini   .ini                  the same rules on mIRC script lines
-                                    (n0=, n1=, ... in aliases.ini, remote.ini,
-                                    popups.ini); other .ini lines are settings
-                                    and are not scanned
-  AHK         .ahk .ah2 .ahk2       ';' at the start of a line or after
-                                    whitespace (not `;, not inside "..." or a
-                                    v2 '...' string), and /* */ blocks
-  SQL         .sql                  '--' and '/* */', outside quotes
-  YAML        .yml .yaml            '#' at the start of a line or after
-                                    whitespace, outside quotes and outside
-                                    block scalars; a workflow 'run: |' or
-                                    'run: >' block is scanned as bash, or as
-                                    PowerShell, batch or Python when the step
-                                    says 'shell: pwsh', 'cmd' or 'python'
-  batch       .bat .cmd             REM and :: at the start of a command
-  C           .c .h .rc             '//' and '/* */', outside "..." strings
-                                    and '...' character literals (escapes
-                                    included)
-
-Extensionless files are scanned by their shebang (python, bash/sh, pwsh,
-node). Every other extensionless file, and a shebang naming any other
-interpreter, is skipped and listed as skipped in the output. Files with any
-other extension are not code this check knows, and are not scanned.
-Renames are detected (git diff -M), so a pure rename adds no lines, unless
-the rename moves the file into a scanned language it was not in before
-(notes.txt -> notes.py, tools/helper -> tools/helper.sh, x.sh -> x.py): then
-every line of the new file counts as added.
-
-The only exemptions are this allowlist (ALLOWED below):
-  - a shebang on line 1 (any language), with nothing after the command;
-  - the PEP 263 encoding line (Python, line 1 or 2), the whole line being
-    '# coding: X', '# -*- coding: X -*-' or '# vim: set fileencoding=X :';
-  - '# type: ignore' and '# type: ignore[code, ...]', codes being words and
-    dashes only (no free text inside the brackets);
-  - '# noqa' and '# noqa: CODE[, CODE]';
-  - '# pragma: no cover';
-  - AHK '#' directives (#Requires, #SingleInstance, #NoEnv, #Include, ...):
-    '#' is not a comment in AHK, so they never match;
-  - PowerShell '#Requires' at the start of a line, the whole line being
-    #Requires parameters (-Version, -PSEdition, -RunAsAdministrator,
-    -Modules, -PSSnapin, -Assembly) with nothing else after them; a
-    -Modules @{...} table may hold only ModuleName, ModuleVersion,
-    RequiredVersion, MaximumVersion and GUID keys with plain values.
-
-Usage (same locally and in CI):
-  python3 tools/checks/no_new_comments.py --all
-  python3 tools/checks/no_new_comments.py --base origin/main --head HEAD
-  python3 tools/checks/no_new_comments.py --event "$GITHUB_EVENT_PATH"
-"""
 from __future__ import annotations
 
 import argparse
+import ast
 import io
 import json
 import os
@@ -143,7 +75,6 @@ def lang_of(path, text=""):
 
 
 def skip_reason(path, text):
-    """Why an extensionless file is skipped, or None when it is scanned or not a candidate."""
     if os.path.splitext(os.path.basename(path))[1] or lang_of(path, text):
         return None
     if text.startswith("#!"):
@@ -173,14 +104,46 @@ def _hash_scan(text, word_start):
     return out
 
 
-def python_comments(text):
-    out = []
+def _string_statement(node):
+    return (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str))
+
+
+def _docstring_comments(text):
     try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return []
+    lines = text.split("\n")
+    out = []
+    for node in ast.walk(tree):
+        if not _string_statement(node):
+            continue
+        start = node.lineno
+        end = node.end_lineno or start
+        if start < 1 or start > len(lines):
+            continue
+        line = lines[start - 1]
+        if start == end:
+            frag = line[node.col_offset:node.end_col_offset]
+        else:
+            frag = line[node.col_offset:]
+        if not frag.strip():
+            frag = line.strip() or '""'
+        out.append((start, end, frag))
+    return out
+
+
+def python_comments(text):
+    try:
+        out = []
         for tok in tokenize.generate_tokens(io.StringIO(text).readline):
             if tok.type == tokenize.COMMENT:
                 out.append((tok.start[0], tok.start[0], tok.string))
     except (tokenize.TokenError, IndentationError, SyntaxError):
-        return _hash_scan(text, " \t;([{,")
+        out = _hash_scan(text, " \t;([{,")
+    out.extend(_docstring_comments(text))
+    out.sort(key=lambda item: (item[0], item[1]))
     return out
 
 
@@ -507,7 +470,6 @@ def _indent(l):
 
 
 def _step_shell(lines, i):
-    """Language of the `run:` script on line index i, from a sibling `shell:` key."""
     col = _key_col(lines[i])
     j = i
     while j > 0 and not lines[j].lstrip().startswith("-"):
@@ -526,7 +488,6 @@ def _step_shell(lines, i):
 
 
 def _run_block(lines, first, body, lang):
-    """Comments in a workflow `run:` script whose first line is line number `first`."""
     ind = min((_indent(l) for l in body if l.strip()), default=0)
     script = "\n".join(l[ind:] for l in body) + "\n"
     return [(first + a - 1, first + b - 1, t) for a, b, t in comments(lang, script)]
@@ -700,7 +661,6 @@ def allowed(lang, start, body, line_text=""):
 
 
 def added_comments(path, text, added):
-    """[(line, text)] for comments that touch an added line and are not allowed."""
     text = text.replace("\r\n", "\n")
     lang = lang_of(path, text)
     if not lang or not added:
@@ -727,7 +687,6 @@ def decode(raw):
 
 
 def parse_diff(diff):
-    """{new path: set(added line numbers)} from a -U0 diff (renames: new path only, even a pure rename)."""
     out, path = {}, None
     for line in diff.split("\n"):
         if line.startswith("diff --git "):
@@ -748,7 +707,6 @@ def parse_diff(diff):
 
 
 def renamed_from(base, head):
-    """{new path: old path} for renames between the merge base and head."""
     out = git("-c", "core.quotePath=false", "diff", "-M", "--name-status", "--diff-filter=R", "-z",
               f"{base}...{head}").decode("utf-8", "replace").split("\0")
     pairs, i = {}, 0
@@ -762,7 +720,6 @@ def renamed_from(base, head):
 
 
 def changes_language(old, new, base, head, text):
-    """True when a rename moves a file into a scanned language it was not in before."""
     mb = git("merge-base", base, head).decode().strip()
     old_text = decode(git("show", f"{mb}:{old}")).replace("\r\n", "\n")
     new_lang = lang_of(new, text.replace("\r\n", "\n"))
@@ -832,8 +789,10 @@ def _report(hits, skipped, whole_tree=False):
         print("no-new-comments: " + h)
     if hits:
         kind = "comment(s) in tracked files" if whole_tree else "added comment(s)"
-        print("no_new_comments: %s %s. Fix: delete the comment line named above. "
-              "Put the why in the PR body or a commit message. Allowed only: shebang, PEP 263 "
+        print("no_new_comments: %s %s. Dread's rule: no code comments, docstrings included. "
+              "Put the why in the PR body or a commit message. "
+              "Fix: delete the docstring (use pass if the body becomes empty). "
+              "Allowed only: shebang, PEP 263 "
               "encoding line, '# type: ignore[...]', '# noqa[: code]', '# pragma: no cover', "
               "AHK # directives, PowerShell #Requires." % (len(hits), kind), file=sys.stderr)
         sys.stdout.flush()
@@ -846,7 +805,8 @@ def _report(hits, skipped, whole_tree=False):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap = argparse.ArgumentParser(
+        description="no-new-comments: no code comment in any tracked file, docstrings included.")
     ap.add_argument("--event", help="GitHub event JSON ($GITHUB_EVENT_PATH)")
     ap.add_argument("--base")
     ap.add_argument("--head", default="HEAD")

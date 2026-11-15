@@ -9,13 +9,14 @@ How this repo is worked, inherited from the house standards.
   exactly one `Doer:` and one `Grader:` naming a current seat, and a
   non-empty `Tested:` that names the command and the result; a visible
   change links its live output there), checked by
-  `tools/checks/pr_body_check.py` → CI green → the Wine proof bed → an
-  independent grader (FAIL unless proven) → merge → post-ship check. No
+  `tools/checks/pr_body_check.py` → CI green → the Wine proof bed →
+  post-ship check. PROD: Hester grades, Dread merges. No
   merge without real green CI unless Dread explicitly overrides.
 - **Merge authority**: Dread merges. This is a PROD repo, as set by the
   `Repo label: PROD` first line of [README.md](README.md). This DLL is mIRC
   infrastructure; it never ships to a live environment without his explicit go-ahead.
-- **Comment ban** (house rule): code and scripts carry no comments.
+- **Comment ban** (house rule): code and scripts carry no comments,
+  docstrings included.
   `tools/checks/no_new_comments.py` scans every tracked file (machine
   directives only: shebang, encoding line, `type: ignore`, `noqa`,
   `pragma`). The why goes in the PR body or a commit message. Docs,

@@ -1,7 +1,3 @@
-"""Tests for tools/checks/no_new_comments.py (stdlib unittest).
-
-Run: python3 -m unittest discover -s tools/checks/tests -p "test_no_new_comments.py" -v
-"""
 import os
 import shutil
 import stat
@@ -24,7 +20,7 @@ def hits(path, text, added=None):
 CASES = {
     "python": ("x.py",
                ["x = 1  # set x\n", "# a comment line\n", "def f():\n    # inside\n    return 1\n"],
-               ["s = '# not a comment'\n", 'def f():\n    """Docstring # with hash."""\n    return 1\n',
+               ["s = '# not a comment'\n",
                 "u = f\"{'#'}\"\n", "x = 1\n"]),
     "bash": ("x.sh",
              ["echo hi # say hi\n", "# comment\n", "  # indented\nls\n", "ls;# after semicolon\n"],
@@ -344,6 +340,24 @@ class Cli(unittest.TestCase):
         self.assertEqual(N.run_all("HEAD"), [])
         self.assertEqual(self.main(["--all"]), 0)
 
+    def test_all_flags_tracked_docstrings(self):
+        self.write(
+            "a.py",
+            '"""module doc"""\ndef f():\n    """function doc"""\n    return 1\n'
+            'class C:\n    """class doc"""\n    x = 1\n',
+        )
+        self.commit()
+        self.assertEqual(N.run_all("HEAD"), [
+            'a.py:1: comment added: \'"""module doc"""\'',
+            'a.py:3: comment added: \'"""function doc"""\'',
+            'a.py:6: comment added: \'"""class doc"""\'',
+        ])
+        self.assertEqual(self.main(["--all"]), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
 
 class Round3Gaps(unittest.TestCase):
     def test_yaml_block_scalar_ends_at_parent_indent(self):
@@ -423,6 +437,45 @@ class Round3Gaps(unittest.TestCase):
             self.assertTrue(any(h.startswith("a.py:") and "why" in h for h in found), found)
 
 
+class DocstringsAreComments(unittest.TestCase):
+    def test_module_function_and_class_docstrings_flagged_in_added_lines(self):
+        text = (
+            '"""module doc"""\n'
+            "def f():\n"
+            '    """function doc"""\n'
+            "    return 1\n"
+            "class C:\n"
+            '    """class doc"""\n'
+            "    x = 1\n"
+        )
+        self.assertEqual(
+            [h[0] for h in hits("x.py", text)],
+            [1, 3, 6],
+        )
+        self.assertEqual(hits("x.py", text, added={1}), [(1, '"""module doc"""')])
+        self.assertEqual(hits("x.py", text, added={3}), [(3, '"""function doc"""')])
+        self.assertEqual(hits("x.py", text, added={6}), [(6, '"""class doc"""')])
+        self.assertEqual(hits("x.py", text, added={4}), [])
+        multi = 'def f():\n    """line one\n    line two\n    """\n    return 1\n'
+        self.assertEqual(hits("m.py", multi, added={3}), [(3, '"""line one')])
+        self.assertEqual(hits("m.py", multi, added={5}), [])
+        bare = 'def f():\n    x = 1\n    "bare string"\n'
+        self.assertEqual(hits("b.py", bare, added={3}), [(3, '"bare string"')])
+        hashed = 'def f():\n    """Docstring # with hash."""\n    return 1\n'
+        self.assertEqual(hits("h.py", hashed), [(2, '"""Docstring # with hash."""')])
+
+    def test_string_value_and_pass_body_are_not_comments(self):
+        text = 's = "hello"\nprint("hello")\nx = f"hi {1}"\nf"bare f-string"\n'
+        self.assertEqual(hits("x.py", text), [])
+        self.assertEqual(hits("p.py", "def f():\n    pass\n\nclass C:\n    pass\n"), [])
+
+    def test_unparsed_python_keeps_hash_comments_only(self):
+        text = 'def f(:\n    """doc"""\n    x = 1  # why\n'
+        found = hits("x.py", text)
+        self.assertTrue(any(h[1] == "# why" for h in found), found)
+        self.assertFalse(any("doc" in h[1] for h in found), found)
+
+
 class CComments(unittest.TestCase):
     def test_comment_found(self):
         self.assertTrue(hits("a.c", "int x = 1; // note\n"))
@@ -440,7 +493,3 @@ class CComments(unittest.TestCase):
             self.assertEqual(hits(path, "char c = '/';\n"), [], path)
             self.assertEqual(hits(path, "char q = '\\'';\n"), [], path)
             self.assertEqual(hits(path, "int n = '/' / 2;\n"), [], path)
-
-
-if __name__ == "__main__":
-    unittest.main()
