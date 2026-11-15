@@ -1,6 +1,8 @@
 import io
 import json
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -203,6 +205,125 @@ class Cli(unittest.TestCase):
         self.assertGreater(out.count("pr_body_check:"), 1)
         self.assertTrue(out.strip().endswith(C.SAME_PR))
 
+
+
+SELF_MERGE_BODY = "For Dread: no grade needed\nDoer: Lyska\nGrader: self-merge\nTested: ran the suite\n"
+HESTER_BODY = "For Dread: named grader\nDoer: Lyska\nGrader: Hester Quill\nTested: ran the suite\n"
+PROD_SELF_MERGE_MSG = (
+    "pr_body_check: Grader: self-merge is not allowed on a PROD repo (README says Repo tier: PROD). "
+    "Fix: set Grader: Hester Quill (a named current seat) in the PR body."
+)
+
+
+class Tier(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix="pr_body_")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def write(self, name, text):
+        path = os.path.join(self.dir, name)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return path
+
+    def check(self, readme_text, body):
+        return run_cli(
+            "--body-file",
+            self.write("body.md", body),
+            "--readme",
+            self.write("README.md", readme_text),
+        )
+
+    def test_prod_readme_self_merge_fails(self):
+        rc, out = self.check("**Repo label: PROD**\nRepo tier: PROD\n", SELF_MERGE_BODY)
+        self.assertEqual(rc, 1, out)
+        self.assertIn(PROD_SELF_MERGE_MSG, out)
+        self.assertTrue(out.strip().endswith(C.SAME_PR))
+        rc, out = self.check("Repo tier: PROD\n", SELF_MERGE_BODY.replace("self-merge", "Self-Merge"))
+        self.assertEqual(rc, 1, out)
+        self.assertIn(PROD_SELF_MERGE_MSG, out)
+
+    def test_test_readme_self_merge_passes(self):
+        rc, out = self.check("**Repo label: PROD**\nRepo tier: TEST\n", SELF_MERGE_BODY)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("pr_body_check: OK", out)
+        self.assertNotIn("self-merge is not allowed", out)
+
+    def test_prod_readme_hester_quill_passes(self):
+        rc, out = self.check("Repo tier: PROD\n", HESTER_BODY)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("pr_body_check: OK", out)
+
+    def test_no_tier_line_self_merge_fails(self):
+        rc, out = self.check("# About\nThis file does not name a tier.\n", SELF_MERGE_BODY)
+        self.assertEqual(rc, 1, out)
+        self.assertIn(PROD_SELF_MERGE_MSG, out)
+        self.assertTrue(out.strip().endswith(C.SAME_PR))
+
+    def test_repo_label_prod_only_self_merge_fails(self):
+        rc, out = self.check("**Repo label: PROD** — see CONTRIBUTING.md.\n", SELF_MERGE_BODY)
+        self.assertEqual(rc, 1, out)
+        self.assertIn(PROD_SELF_MERGE_MSG, out)
+        self.assertTrue(out.strip().endswith(C.SAME_PR))
+
+    def test_default_readme_is_repo_root_next_to_tools(self):
+        path = C.default_readme()
+        root = os.path.dirname(path)
+        self.assertEqual(os.path.basename(path), "README.md")
+        self.assertTrue(os.path.isdir(os.path.join(root, "tools")))
+        self.assertTrue(os.path.isfile(path))
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        self.assertRegex(text, r"(?m)^Repo tier:\s*PROD\s*$")
+        self.assertEqual(C.tier_from_text(text), "PROD")
+
+    def test_event_without_readme_flag_uses_repo_readme(self):
+        event = self.write("event.json", json.dumps({"pull_request": {"body": SELF_MERGE_BODY}}))
+        rc, out = run_cli("--event", event)
+        self.assertEqual(rc, 1, out)
+        self.assertIn(PROD_SELF_MERGE_MSG, out)
+        self.assertTrue(out.strip().endswith(C.SAME_PR))
+        event = self.write("event.json", json.dumps({"pull_request": {"body": HESTER_BODY}}))
+        rc, out = run_cli("--event", event)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("pr_body_check: OK", out)
+
+    def test_base_prod_head_test_readme_self_merge_fails(self):
+        repo = tempfile.mkdtemp(prefix="pr_body_git_")
+        try:
+            def git(*args):
+                subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True)
+
+            git("init")
+            git("config", "user.name", "Lyska")
+            git("config", "user.email", "5559848+DreadfullyDespized@users.noreply.github.com")
+            git("config", "commit.gpgsign", "false")
+            readme = os.path.join(repo, "README.md")
+            with open(readme, "w", encoding="utf-8") as fh:
+                fh.write("Repo tier: PROD\n")
+            git("add", "README.md")
+            git("commit", "-m", "base prod")
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+            with open(readme, "w", encoding="utf-8") as fh:
+                fh.write("Repo tier: TEST\n")
+            git("add", "README.md")
+            git("commit", "-m", "head test")
+            event = os.path.join(repo, "event.json")
+            with open(event, "w", encoding="utf-8") as fh:
+                json.dump({"pull_request": {"body": SELF_MERGE_BODY, "base": {"sha": base}}}, fh)
+            old = os.getcwd()
+            try:
+                os.chdir(repo)
+                rc, out = run_cli("--event", event)
+            finally:
+                os.chdir(old)
+            self.assertEqual(rc, 1, out)
+            self.assertIn(PROD_SELF_MERGE_MSG, out)
+            self.assertTrue(out.strip().endswith(C.SAME_PR))
+        finally:
+            shutil.rmtree(repo, ignore_errors=True)
 
 if __name__ == "__main__":
     unittest.main()

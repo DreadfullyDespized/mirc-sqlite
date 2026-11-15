@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 import sys
 
 BODY_MAX_LINES = 12
@@ -31,6 +33,11 @@ PAREN_RX = re.compile(r"\s*\([^)]*\)\s*$")
 SAME_PR = (
     "Fix it on this same PR: edit the PR body (it re-runs on edit). "
     "Do not close and reopen a copy. Do not rerun CI without a change."
+)
+TIER_LINE_RX = re.compile(r"^Repo tier:\s*(TEST|PROD)\s*$", re.M)
+PROD_SELF_MERGE = (
+    "pr_body_check: Grader: self-merge is not allowed on a PROD repo (README says Repo tier: PROD). "
+    "Fix: set Grader: Hester Quill (a named current seat) in the PR body."
 )
 
 
@@ -126,10 +133,66 @@ def problems(body):
     return out
 
 
+def default_readme():
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.normpath(os.path.join(here, "..", "..", "README.md"))
+
+
+def tier_from_text(text):
+    text = (text or "").replace("\r", "")
+    found = TIER_LINE_RX.findall(text)
+    if len(found) == 1:
+        return found[0]
+    if "Repo label: PROD" in text:
+        return "PROD"
+    return "PROD"
+
+
+def tier_from_readme(path):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return "PROD"
+    return tier_from_text(text)
+
+
+def tier_from_base_sha(sha):
+    sha = (sha or "").strip()
+    if not sha:
+        return "PROD"
+    try:
+        proc = subprocess.run(
+            ["git", "show", "%s:README.md" % sha],
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return "PROD"
+    if proc.returncode != 0:
+        return "PROD"
+    return tier_from_text(proc.stdout)
+
+
+def prod_self_merge_problem(body, tier):
+    if tier != "PROD":
+        return []
+    lines = nonblank_lines(strip_body(body))
+    graders = []
+    for ln in lines:
+        grader = GRADER_RX.match(ln)
+        if grader:
+            graders.append(seat_value(grader.group(1)))
+    if len(graders) == 1 and graders[0].casefold() == "self-merge":
+        return [PROD_SELF_MERGE]
+    return []
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Check a PR body for the repo-loop shape.")
     ap.add_argument("--event", help="GitHub event JSON ($GITHUB_EVENT_PATH)")
     ap.add_argument("--body-file")
+    ap.add_argument("--readme", default=default_readme())
     a = ap.parse_args(argv)
     if a.event:
         with open(a.event, encoding="utf-8") as fh:
@@ -139,12 +202,16 @@ def main(argv=None):
             print("pr_body_check: not a pull_request event; nothing to check")
             return 0
         body = pr.get("body") or ""
+        base = ((pr.get("base") or {}).get("sha") or "").strip()
+        tier = tier_from_base_sha(base)
     elif a.body_file:
         with open(a.body_file, encoding="utf-8") as fh:
             body = fh.read()
+        tier = tier_from_readme(a.readme)
     else:
         ap.error("pass --event or --body-file")
     found = problems(body)
+    found.extend(prod_self_merge_problem(body, tier))
     for line in found:
         print(line)
     if found:
