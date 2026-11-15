@@ -85,12 +85,22 @@ class TestNoPrintRule(unittest.TestCase):
         self.assertEqual(rc, 1)
         self.assertNotIn(canary, output)
         self.assertIn("private-term", output)
+        self.assertIn("Fix:", output)
+        self.assertTrue(output.strip().endswith(
+            "Fix it on this same PR: edit the PR body or push the fix to this branch. "
+            "Do not close and reopen a copy. Do not rerun CI without a change."
+        ))
 
     def test_email_value_never_in_output(self):
         rc, output = self.run_main(["--stdin"], "mail person@realdomain.net", "")
         self.assertEqual(rc, 1)
         self.assertNotIn("person@realdomain.net", output)
         self.assertIn("email", output)
+        self.assertIn("Fix: delete the identifier", output)
+        self.assertTrue(output.strip().endswith(
+            "Fix it on this same PR: edit the PR body or push the fix to this branch. "
+            "Do not close and reopen a copy. Do not rerun CI without a change."
+        ))
 
     def test_clean_stdin_passes(self):
         rc, output = self.run_main(["--stdin"], "nothing to see here", "")

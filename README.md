@@ -1,4 +1,5 @@
 Repo label: PROD
+Repo tier: PROD
 
 # mirc-sqlite
 
@@ -39,7 +40,8 @@ resource (`src/msqlite.rc`, version 2.0.0). A SQLite 3.54.0 bump (DLL
   (the export list) and `msqlite.rc` (the version resource).
 - `tools/` — `fetch-sqlite.sh` (downloads and hash-checks the SQLite
   3.53.4 amalgamation), `build.sh` (the 32-bit build), `checks/` (the PII
-  gate) and `proof/`: `proof.mrc`, the alias suite that exercises the
+  gate, the repo-loop PR-body check, and the no-code-comments gate) and
+  `proof/`: `proof.mrc`, the alias suite that exercises the
   query shapes in `docs/INTERFACE.md`, and `diff.sh`, which compares its
   log from the 2009 DLL with its log from the new build.
 - `docs/` — interface spec (`INTERFACE.md`) and the validation record
@@ -47,7 +49,7 @@ resource (`src/msqlite.rc`, version 2.0.0). A SQLite 3.54.0 bump (DLL
 
 ## Rules
 
-- Code carries no comments (house rule; see AGENTS.md).
+- Code carries no comments, docstrings included (house rule; see AGENTS.md).
 - Standalone mIRC infrastructure. The DLL ships only after the Wine
   proof passes and Dread merges.
 - The 2009 DLL's quirks are bugs, not spec — except where a script
@@ -55,5 +57,6 @@ resource (`src/msqlite.rc`, version 2.0.0). A SQLite 3.54.0 bump (DLL
 
 ## Process
 
-See AGENTS.md and LOOP-STATE.md. Every change: issue first, PR with
-For Dread + Blast radius, CI, Wine proof, independent grader, Dread merges.
+See AGENTS.md and LOOP-STATE.md. Every change: issue first, a PR body in
+the repo-loop shape (`.github/pull_request_template.md`, checked by
+`tools/checks/pr_body_check.py`), CI, Wine proof. PROD: Hester grades, Dread merges.

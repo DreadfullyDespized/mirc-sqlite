@@ -23,9 +23,14 @@ jobs:
           bash tools/build.sh
       - name: Verify 32-bit PE
         run: |
-          file build/msqlite.dll | grep -q "PE32 executable" || (echo "not a 32-bit PE" && exit 1)
+          file build/msqlite.dll | grep -q "PE32 executable" || (echo "not a 32-bit PE. Fix: rebuild with i686-w64-mingw32-gcc so build/msqlite.dll is a PE32 executable." && exit 1)
       - name: Upload DLL artifact
         uses: actions/upload-artifact@v4
         with:
           name: msqlite.dll
           path: build/msqlite.dll
+      - name: Build failure names the fix
+        if: failure()
+        run: |
+          echo "::error::The 32-bit DLL build failed. Fix: make bash tools/build.sh write a PE32 build/msqlite.dll (mingw-w64 i686, tools/fetch-sqlite.sh, and the compile), then push that change to this branch."
+          echo "::error::Fix it on this same PR: push the fix to this branch. Do not close and reopen a copy. Do not rerun CI without a change."

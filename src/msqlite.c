@@ -2417,7 +2417,7 @@ void __stdcall LoadDll(LOADINFO* li) {
 }
 
 int __stdcall UnloadDll(int t) {
-  if (t == 1) return 0; /* mIRC idle-timeout probe: 0 keeps the DLL loaded */
+  if (t == 1) return 0;
   close_all();
   if (g_mapview) { UnmapViewOfFile(g_mapview); g_mapview = 0; }
   if (g_map) { CloseHandle(g_map); g_map = 0; }
