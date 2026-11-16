@@ -9,7 +9,10 @@ with `diff.sh`:
 
 The new DLL must match the baseline everywhere except the documented
 version-ceiling fixes. Step s16's AUTHFN-DENY line is an expected
-difference from the 2009 baseline. Scratch databases only — nothing
-touches a live instance.
+difference from the 2009 baseline; `diff.sh` treats that line as
+expected and does not fail on it. Steps s17 and s18 cover a
+`create_function` callback and a nested same-connection call refused
+with error 200, with the outer query left clean. Scratch databases
+only — nothing touches a live instance.
 
 - `MSQLITE_MRC` env overrides the alias file fetch for offline runs.

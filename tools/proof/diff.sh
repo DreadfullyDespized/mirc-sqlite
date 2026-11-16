@@ -10,7 +10,8 @@ norm() {
       -e 's/ (dllver|libver)=[^ ]*/ \1=?/g' \
       -e 's/^(PROBE [^ ]+).*/\1/' \
       -e 's/^BUSY badid=.*$/BUSY badid=?/' \
-      -e 's/ errstr=.*$/ errstr=?/'
+      -e 's/ errstr=.*$/ errstr=?/' \
+      -e 's/^AUTHFN-DENY .*/AUTHFN-DENY expected/'
     printf 'STATUS-COUNT %s\n' "$(grep -c '^STATUS ' "$1" || true)"
   }
 }
