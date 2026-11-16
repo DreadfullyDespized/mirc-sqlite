@@ -18,12 +18,19 @@ SHARED = (
     "END\n"
 )
 
+OLD_DENY = "AUTHFN-DENY create=1 errno=0\n"
+NEW_DENY = "AUTHFN-DENY create=0 errno=23\n"
+
 
 def write_log(dirpath, name, body):
     path = os.path.join(dirpath, name)
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(body)
     return path
+
+
+def with_deny(body, line):
+    return body.replace("END\n", line + "END\n")
 
 
 class ProofDiff(unittest.TestCase):
@@ -40,41 +47,26 @@ class ProofDiff(unittest.TestCase):
             text=True,
         )
 
-    def test_authfn_deny_value_difference_passes(self):
-        old = write_log(
-            self.dir,
-            "old.log",
-            SHARED.replace("END\n", "AUTHFN-DENY create=1 errno=0\nEND\n"),
-        )
-        new = write_log(
-            self.dir,
-            "new.log",
-            SHARED.replace("END\n", "AUTHFN-DENY create=0 errno=23\nEND\n"),
-        )
+    def test_known_authfn_deny_pair_passes(self):
+        old = write_log(self.dir, "old.log", with_deny(SHARED, OLD_DENY))
+        new = write_log(self.dir, "new.log", with_deny(SHARED, NEW_DENY))
         r = self.run_diff(old, new)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("PROOF-DIFF PASS", r.stdout)
 
-    def test_identical_logs_pass(self):
-        body = SHARED.replace("END\n", "AUTHFN-DENY create=0 errno=23\nEND\n")
-        old = write_log(self.dir, "old.log", body)
-        new = write_log(self.dir, "new.log", body)
+    def test_new_side_create_1_fails(self):
+        old = write_log(self.dir, "old.log", with_deny(SHARED, OLD_DENY))
+        new = write_log(self.dir, "new.log", with_deny(SHARED, OLD_DENY))
         r = self.run_diff(old, new)
-        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertIn("PROOF-DIFF PASS", r.stdout)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("PROOF-DIFF FAIL", r.stderr)
 
-    def test_unexpected_line_still_fails(self):
-        old = write_log(
-            self.dir,
-            "old.log",
-            SHARED.replace("END\n", "AUTHFN-DENY create=0 errno=23\nEND\n"),
-        )
+    def test_unexpected_errno_fails(self):
+        old = write_log(self.dir, "old.log", with_deny(SHARED, OLD_DENY))
         new = write_log(
             self.dir,
             "new.log",
-            SHARED.replace("OPEN file ok=1 errno=0\n", "OPEN file ok=0 errno=14\n").replace(
-                "END\n", "AUTHFN-DENY create=0 errno=23\nEND\n"
-            ),
+            with_deny(SHARED, "AUTHFN-DENY create=0 errno=19\n"),
         )
         r = self.run_diff(old, new)
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
@@ -82,11 +74,17 @@ class ProofDiff(unittest.TestCase):
 
     def test_authfn_deny_missing_on_one_side_fails(self):
         old = write_log(self.dir, "old.log", SHARED)
-        new = write_log(
-            self.dir,
-            "new.log",
-            SHARED.replace("END\n", "AUTHFN-DENY create=0 errno=23\nEND\n"),
+        new = write_log(self.dir, "new.log", with_deny(SHARED, NEW_DENY))
+        r = self.run_diff(old, new)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("PROOF-DIFF FAIL", r.stderr)
+
+    def test_unexpected_line_still_fails(self):
+        old = write_log(self.dir, "old.log", with_deny(SHARED, OLD_DENY))
+        new_body = with_deny(SHARED, NEW_DENY).replace(
+            "OPEN file ok=1 errno=0\n", "OPEN file ok=0 errno=14\n"
         )
+        new = write_log(self.dir, "new.log", new_body)
         r = self.run_diff(old, new)
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertIn("PROOF-DIFF FAIL", r.stderr)
