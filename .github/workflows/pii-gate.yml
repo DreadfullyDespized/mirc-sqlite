@@ -10,6 +10,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   pii-gate:
@@ -38,3 +39,11 @@ jobs:
       - name: No code comments in any file
         if: always()
         run: python3 tools/checks/no_new_comments.py --all
+      - name: Prior-FAIL checker tests
+        if: always()
+        run: python3 -m unittest discover -s tools/checks/tests -p "test_prior_fail_check.py" -v
+      - name: Prior FAIL blockers still unfixed
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 tools/checks/prior_fail_check.py --event "$GITHUB_EVENT_PATH"
