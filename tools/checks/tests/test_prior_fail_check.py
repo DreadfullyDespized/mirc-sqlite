@@ -14,7 +14,7 @@ import prior_fail_check as C
 
 PASSING_BODY = (
     "For Dread: Merge (PROD) after Hester's PASS.\n"
-    "Closes #35\n"
+    "Issue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/35\n"
     "Doer: Lyska\n"
     "Grader: Hester Quill\n"
     "Problem: a FAIL can be re-asked after only a main merge\n"
@@ -25,7 +25,7 @@ PASSING_BODY = (
 
 PROOF_BODY = (
     "For Dread: Waive or run Proof item 2 in mIRC with the new DLL, then merge (PROD).\n"
-    "Closes #15\n"
+    "Issue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/15\n"
     "Doer: Lyska\n"
     "Grader: Hester Quill\n"
     "Problem: SQLite 3.53.4 is current\n"
@@ -36,7 +36,7 @@ PROOF_BODY = (
 
 PROOF_WITH_LOG = (
     "For Dread: Merge (PROD) after Hester's PASS.\n"
-    "Closes #15\n"
+    "Issue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/15\n"
     "Doer: Lyska\n"
     "Grader: Hester Quill\n"
     "Problem: SQLite 3.53.4 is current\n"
@@ -48,7 +48,7 @@ PROOF_WITH_LOG = (
 ISSUE_30_BODY = (
     "For Dread: Waive or run Proof item 2 in mIRC with the new DLL (version 3.54.0, "
     "create_function, nested-call error 200), then merge (PROD) after Hester's PASS.\n"
-    "Closes #15\n"
+    "Issue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/15\n"
     "Doer: Lyska\n"
     "Grader: Hester Quill\n"
     "Problem: msqlite.dll builds against SQLite 3.53.4; 3.54.0 is out.\n"
@@ -280,6 +280,10 @@ class PriorFailCheck(unittest.TestCase):
         self.assertEqual(rc, 1, out)
         self.assertIn("names a Proof item and has no linked live log", out)
         self.assertTrue(out.strip().endswith(C.SAME_PR))
+
+    def test_issue_url_line_is_not_a_live_log(self):
+        self.assertFalse(C.has_linked_live_log(PROOF_BODY))
+        self.assertTrue(C.has_linked_live_log(PROOF_WITH_LOG))
 
     def test_proof_item_with_log_passes(self):
         git(self.repo.path, "checkout", "-b", "feature")
