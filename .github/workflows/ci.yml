@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   repo-ci:
-    uses: dreadedpotato/.github/.github/workflows/repo-ci.yml@b71cbc1cf46f9362fe077575247c795db2d1b120
+    uses: dreadedpotato/.github/.github/workflows/repo-ci.yml@7b28b747d153d0b60e4a130e29e65d79edc33f13
     with:
       runner: ${{ vars.CI_RUNNER_LABEL || 'ubuntu-latest' }}
       max-file-mb: ${{ fromJSON(vars.CI_MAX_FILE_MB || '10') }}
