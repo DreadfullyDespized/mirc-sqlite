@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 TEMPLATE = os.path.join(ROOT, ".github", "pull_request_template.md")
 TEMPLATE_TEXT = (
     "For Dread:\n"
-    "Closes #\n"
+    "Issue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/\n"
     "\n"
     "Doer:\n"
     "Grader:\n"
@@ -28,7 +28,7 @@ TEMPLATE_TEXT = (
 )
 PASSING = (
     "For Dread: shared body check\n"
-    "Closes #31\n"
+    "Issue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/31\n"
     "\n"
     "Doer: Lyska\n"
     "Grader: Hester Quill\n"
@@ -50,7 +50,7 @@ def run_cli(*argv):
 def padded(extra):
     lines = [
         "For Dread: length check",
-        "Closes #31",
+        "Issue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/31",
         "Doer: Lyska",
         "Grader: Hester Quill",
         "Problem: length",
@@ -157,7 +157,7 @@ class Rules(unittest.TestCase):
         self.assertEqual(C.problems(body), [])
 
     def test_html_comments_and_cr_are_stripped_first(self):
-        hidden = "<!--\nFor Dread: hidden\n-->\nCloses #1\nDoer: Lyska\nGrader: Hester\nTested: ran\n"
+        hidden = "<!--\nFor Dread: hidden\n-->\nIssue: https://github.com/DreadfullyDespized/mirc-sqlite/issues/1\nDoer: Lyska\nGrader: Hester\nTested: ran\n"
         self.assertTrue(any("For Dread" in e for e in C.problems(hidden)))
         commented = PASSING + "<!--\n" + ("extra line\n" * 20) + "-->\n"
         self.assertEqual(C.problems(commented), [])

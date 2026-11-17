@@ -16,6 +16,7 @@ GRADE_FAIL_RX = re.compile(r"^Grade:\s*FAIL\b", re.I | re.M)
 SHA_RX = re.compile(r"\b([0-9a-f]{7,40})\b", re.I)
 PROOF_ITEM_RX = re.compile(r"\bProof item\b", re.I)
 LOG_URL_RX = re.compile(r"https?://\S+", re.I)
+ISSUE_LINE_RX = re.compile(r"^[ \t]*Issue:.*$", re.I | re.M)
 SAME_PR = (
     "Fix it on this same PR: push the fix or edit the PR body (a body edit re-runs the check). "
     "Do not close and reopen a copy. Do not rerun CI without a change."
@@ -47,7 +48,7 @@ def names_proof_item(body):
 
 
 def has_linked_live_log(body):
-    return bool(LOG_URL_RX.search(strip_body(body)))
+    return bool(LOG_URL_RX.search(ISSUE_LINE_RX.sub("", strip_body(body))))
 
 
 def proof_item_problems(body):
