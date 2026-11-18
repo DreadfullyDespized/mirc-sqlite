@@ -5,6 +5,16 @@ alias t.probe {
   if (%r) { t.log PROBE %name ok=1 rows= $+ $sqlite_num_rows(%r) | sqlite_free %r }
   else { t.log PROBE %name ok=0 err= $+ %sqlite_errstr }
 }
+alias t.authok { return 0 }
+alias t.authdeny { if ($1 == 31) { return 1 } | return 0 }
+alias t.dbl { return $calc($1 * 2) }
+alias t.nest {
+  var %r = $sqlite_query(%t.nestdb, SELECT 1 AS n)
+  set %t.nestok $iif(%r, 1, 0)
+  set %t.nesterr %sqlite_errno
+  if (%r) { sqlite_free %r }
+  return 7
+}
 alias t.step {
   goto s $+ $1
   :s1
@@ -106,6 +116,42 @@ alias t.step {
   }
   return
   :s16
+  var %db = $sqlite_open(%t.dbdir $+ \proof.db)
+  var %d0 = $sqlite_exec(%db, DROP TABLE IF EXISTS ad)
+  var %d1 = $sqlite_exec(%db, DROP TABLE IF EXISTS ad2)
+  var %set1 = $sqlite_set_authorizer(%db, t.authok)
+  var %c1 = $sqlite_exec(%db, CREATE TABLE ad(id INTEGER PRIMARY KEY, created TEXT DEFAULT (datetime('now'))))
+  var %i1 = $sqlite_exec(%db, INSERT INTO ad(id) VALUES(1))
+  var %q1 = $sqlite_query(%db, SELECT created FROM ad WHERE id = 1)
+  t.log AUTHFN set= $+ $iif(%set1, 1, 0) create= $+ $iif(%c1, 1, 0) insert= $+ $iif(%i1, 1, 0) deflen= $+ $iif(%q1, $len($sqlite_result(%q1, created)), 0)
+  if (%q1) { sqlite_free %q1 }
+  var %set2 = $sqlite_set_authorizer(%db, t.authdeny)
+  var %c2 = $sqlite_exec(%db, CREATE TABLE ad2(id INTEGER PRIMARY KEY, created TEXT DEFAULT (datetime('now'))))
+  t.log AUTHFN-DENY create= $+ $iif(%c2, 1, 0) errno= $+ %sqlite_errno
+  var %clr = $sqlite_set_authorizer(%db)
+  t.log AUTHFN clear= $+ $iif(%clr, 1, 0)
+  sqlite_close %db
+  return
+  :s17
+  var %db = $sqlite_open(%t.dbdir $+ \proof.db)
+  var %reg = $sqlite_create_function(%db, tdouble, t.dbl, 1)
+  var %q = $sqlite_query(%db, SELECT tdouble(21) AS v)
+  t.log CREATEFN set= $+ $iif(%reg, 1, 0) ok= $+ $iif(%q, 1, 0) v= $+ $iif(%q, $sqlite_result(%q, v), -) errno= $+ %sqlite_errno
+  if (%q) { sqlite_free %q }
+  sqlite_close %db
+  return
+  :s18
+  var %db = $sqlite_open(%t.dbdir $+ \proof.db)
+  set %t.nestdb %db
+  unset %t.nestok
+  unset %t.nesterr
+  var %reg = $sqlite_create_function(%db, tnest, t.nest, 0)
+  var %q = $sqlite_query(%db, SELECT tnest() AS v)
+  t.log NESTED set= $+ $iif(%reg, 1, 0) outer= $+ $iif(%q, 1, 0) v= $+ $iif(%q, $sqlite_result(%q, v), -) nestok= $+ %t.nestok errno= $+ %t.nesterr
+  if (%q) { sqlite_free %q }
+  sqlite_close %db
+  return
+  :s19
   t.log END
   exit -n
   return
@@ -113,7 +159,7 @@ alias t.step {
 }
 alias t.run {
   inc %t.i
-  if (%t.i > 16) { return }
+  if (%t.i > 19) { return }
   .timerTRUN -m 1 100 t.run
   t.step %t.i
   return

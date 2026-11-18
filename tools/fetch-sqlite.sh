@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
-URL="${SQLITE_URL:-https://www.sqlite.org/2026/sqlite-amalgamation-3530400.zip}"
-SHA3_256="${SQLITE_SHA3_256:-628a44cfe82c66aed1ccbbe85a562d2e33ebe64b3288981ed76285612227934e}"
+URL="${SQLITE_URL:-https://www.sqlite.org/2026/sqlite-amalgamation-3540000.zip}"
+SHA3_256="${SQLITE_SHA3_256:-7b670a62fdfbd672b75fef004cb703c8a3e87d3a5cc7d675b4a08337004a2d93}"
 cd "$(dirname "$0")/.."
 mkdir -p build/deps
 python3 - "$URL" "$SHA3_256" <<'PYEOF'
