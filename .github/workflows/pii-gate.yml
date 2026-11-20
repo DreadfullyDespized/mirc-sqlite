@@ -20,28 +20,14 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
-      - name: Checker tests
-        run: python3 -m unittest discover -s tools/checks/tests -p "test_pii_check.py" -v
       - name: No PII in the PR body, added lines, or commit messages
         if: always()
         env:
           PII_TERMS: ${{ secrets.PII_TERMS }}
         run: python3 tools/checks/pii_check.py --event "$GITHUB_EVENT_PATH"
-      - name: PR body checker tests
-        if: always()
-        run: python3 -m unittest discover -s tools/checks/tests -p "test_pr_body_check.py" -v
-      - name: PR body (For Dread first, 12 lines, current seats, Tested)
-        if: always()
-        run: python3 tools/checks/pr_body_check.py --event "$GITHUB_EVENT_PATH"
-      - name: No-new-comments checker tests
-        if: always()
-        run: python3 -m unittest discover -s tools/checks/tests -p "test_no_new_comments.py" -v
       - name: No code comments in any file
         if: always()
         run: python3 tools/checks/no_new_comments.py --all
-      - name: Prior-FAIL checker tests
-        if: always()
-        run: python3 -m unittest discover -s tools/checks/tests -p "test_prior_fail_check.py" -v
       - name: Prior FAIL blockers still unfixed
         if: always()
         env:

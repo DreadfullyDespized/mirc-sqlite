@@ -10,13 +10,13 @@ import sys
 import urllib.error
 import urllib.request
 
-import pr_body_check
-
 GRADE_FAIL_RX = re.compile(r"^Grade:\s*FAIL\b", re.I | re.M)
 SHA_RX = re.compile(r"\b([0-9a-f]{7,40})\b", re.I)
 PROOF_ITEM_RX = re.compile(r"\bProof item\b", re.I)
 LOG_URL_RX = re.compile(r"https?://\S+", re.I)
 ISSUE_LINE_RX = re.compile(r"^[ \t]*Issue:.*$", re.I | re.M)
+HTML_COMMENT_RX = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
+TIER_LINE_RX = re.compile(r"^Repo tier:\s*(TEST|PROD)\s*$", re.M)
 SAME_PR = (
     "Fix it on this same PR: push the fix or edit the PR body (a body edit re-runs the check). "
     "Do not close and reopen a copy. Do not rerun CI without a change."
@@ -40,7 +40,33 @@ COMMENTS_FIX = (
 
 
 def strip_body(body):
-    return pr_body_check.strip_body(body)
+    text = (body or "").replace("\r", "")
+    return HTML_COMMENT_RX.sub("", text)
+
+
+def tier_from_text(text):
+    text = (text or "").replace("\r", "")
+    found = TIER_LINE_RX.findall(text)
+    if len(found) == 1:
+        return found[0]
+    return "PROD"
+
+
+def tier_from_base_sha(sha):
+    sha = (sha or "").strip()
+    if not sha:
+        return "PROD"
+    try:
+        proc = subprocess.run(
+            ["git", "show", "%s:README.md" % sha],
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return "PROD"
+    if proc.returncode != 0:
+        return "PROD"
+    return tier_from_text(proc.stdout)
 
 
 def names_proof_item(body):
@@ -284,7 +310,7 @@ def main(argv=None):
     body = pr.get("body") or ""
     base = ((pr.get("base") or {}).get("sha") or "").strip()
     head = ((pr.get("head") or {}).get("sha") or "").strip()
-    if pr_body_check.tier_from_base_sha(base) != "PROD":
+    if tier_from_base_sha(base) != "PROD":
         print("prior_fail_check: not a PROD PR; nothing to check")
         return 0
     if not base or not head:
