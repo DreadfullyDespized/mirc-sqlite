@@ -9,7 +9,7 @@ How this repo is worked, inherited from the house standards.
   exactly one `Doer:` and one `Grader:` naming a current seat, and a
   non-empty `Tested:` that names the command and the result; a visible
   change links its live output there), checked by
-  `tools/checks/pr_body_check.py` → CI green → the Wine proof bed →
+  the org repo-ci PR identity check → CI green → the Wine proof bed →
   post-ship check. PROD: Hester grades, Dread merges. No
   merge without real green CI unless Dread explicitly overrides.
 - **Merge authority**: Dread merges. This is a PROD repo, as set by the

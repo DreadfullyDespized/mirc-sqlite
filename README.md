@@ -59,4 +59,4 @@ resource (`src/msqlite.rc`, version 2.0.0). A SQLite 3.54.0 bump (DLL
 
 See AGENTS.md and LOOP-STATE.md. Every change: issue first, a PR body in
 the repo-loop shape (`.github/pull_request_template.md`, checked by
-`tools/checks/pr_body_check.py`), CI, Wine proof. PROD: Hester grades, Dread merges.
+the org repo-ci PR identity check), CI, Wine proof. PROD: Hester grades, Dread merges.

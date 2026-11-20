@@ -273,6 +273,12 @@ class PriorFailCheck(unittest.TestCase):
         self.assertIn("id 2", out)
         self.assertIn("on %s" % second[:7], out)
 
+    def test_proof_item_inside_html_comment_is_ignored(self):
+        hidden = "<!-- Proof item stays in the comment -->\n"
+        self.assertEqual(C.proof_item_problems(hidden), [])
+        visible = hidden + "Proof item is outside the comment\n"
+        self.assertEqual(C.proof_item_problems(visible), [C.PROOF_NO_LOG])
+
     def test_proof_item_without_log_fails(self):
         git(self.repo.path, "checkout", "-b", "feature")
         self.repo.commit("feature")

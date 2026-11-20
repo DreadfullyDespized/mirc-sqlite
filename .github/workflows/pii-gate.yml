@@ -27,12 +27,6 @@ jobs:
         env:
           PII_TERMS: ${{ secrets.PII_TERMS }}
         run: python3 tools/checks/pii_check.py --event "$GITHUB_EVENT_PATH"
-      - name: PR body checker tests
-        if: always()
-        run: python3 -m unittest discover -s tools/checks/tests -p "test_pr_body_check.py" -v
-      - name: PR body (For Dread first, 12 lines, current seats, Tested)
-        if: always()
-        run: python3 tools/checks/pr_body_check.py --event "$GITHUB_EVENT_PATH"
       - name: No-new-comments checker tests
         if: always()
         run: python3 -m unittest discover -s tools/checks/tests -p "test_no_new_comments.py" -v
